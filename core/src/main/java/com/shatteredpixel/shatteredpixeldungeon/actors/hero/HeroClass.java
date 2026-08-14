@@ -51,6 +51,7 @@ import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.Waterskin;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClothArmor;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.CloakOfShadows;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Detonator;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
 import com.shatteredpixel.shatteredpixeldungeon.items.bags.VelvetPouch;
 import com.shatteredpixel.shatteredpixeldungeon.items.food.Food;
@@ -270,6 +271,16 @@ public enum HeroClass {
 	}
 
 	private static void initSapper(Hero hero) {
+		WornShortsword shortsword = new WornShortsword();
+		shortsword.identify();
+		hero.belongings.weapon = shortsword;
+
+		Detonator detonator = new Detonator();
+		detonator.identify();
+
+		hero.belongings.artifact = detonator;
+		hero.belongings.artifact.activate(hero);
+		Dungeon.quickslot.setSlot(0, detonator);
 
 		new PotionOfToxicGas().identify();
 		new ScrollOfRecharging().identify();
@@ -323,7 +334,7 @@ public enum HeroClass {
 			case CLERIC:
 				return Assets.Sprites.CLERIC;
 			case SAPPER:
-				return Assets.Sprites.DUELIST;
+				return Assets.Sprites.SAPPER;
 		}
 	}
 
