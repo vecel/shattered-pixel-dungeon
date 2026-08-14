@@ -59,7 +59,7 @@ public abstract class Trap implements Bundlable {
 	public int pos;
 	public boolean reclaimed = false; //if this trap was spawned by reclaim trap
 
-	public boolean visible;
+	public boolean visible = true;
 	public boolean active = true;
 	public boolean disarmedByActivation = true;
 	
@@ -107,6 +107,11 @@ public abstract class Trap implements Bundlable {
 	public void disarm(){
 		active = false;
 		Dungeon.level.disarmTrap(pos);
+	}
+
+	public void activateAndDisarm() {
+		activate();
+		disarm();
 	}
 
 	//returns the depth value the trap should use for determining its power

@@ -6,13 +6,13 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Regeneration;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfEnergy;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.WornDartTrap;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.CellSelector;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
-import com.shatteredpixel.shatteredpixeldungeon.windows.WndClericSpells;
-import com.watabou.utils.Bundle;
 
 import java.util.ArrayList;
 
@@ -60,25 +60,74 @@ public class Detonator extends Artifact {
         }
 
         if (action.equals(AC_DETONATE)) {
-            // Handle detonate action
-            GameScene.selectCell(caster);
+            GameScene.selectCell(activationSelector);
         }
 
         if (action.equals(AC_SET_TRAP)) {
-            // Handle set trap action
+            GameScene.selectCell(setTrapSelector);
         }
     }
 
-    private final CellSelector.Listener caster = new CellSelector.Listener() {
+    private final CellSelector.Listener activationSelector = new CellSelector.Listener() {
 
         @Override
         public void onSelect(Integer cell) {
-            GLog.i("This feature is not implemented yet!");
+            if (cell == null) return;
+
+            Hero hero = Dungeon.hero;
+            if (!hero.withinFieldOfView(cell)) return;
+
+            Trap trap = Dungeon.getTrap(cell);
+            if (trap == null) {
+                GLog.i(Messages.get(Detonator.class, "activate_no_trap"));
+                return;
+            }
+
+            if (charge <= 1) {
+                GLog.i(Messages.get(Detonator.class, "activate_no_charge"));
+                return;
+            }
+
+            charge -= 2;
+            trap.activateAndDisarm();
+
+            hero.dispelInvisibility();
+            hero.onArtifactUsed();
+            hero.spendAndNext(1f);
         }
 
         @Override
         public String prompt() {
-            return "Select a trap";
+            return Messages.get(Detonator.class, "activate_prompt");
+        }
+    };
+
+    private final CellSelector.Listener setTrapSelector = new CellSelector.Listener() {
+        @Override
+        public void onSelect(Integer cell) {
+            if (cell == null) return;
+            if (!Dungeon.isCellEmpty(cell)) return;
+
+            if (charge <= 0) {
+                GLog.i(Messages.get(Detonator.class, "set_trap_no_charge"));
+                return;
+            }
+
+            charge -= 1;
+
+            // TODO: change trap type
+            Dungeon.setTrap(new WornDartTrap(), cell);
+
+            Hero hero = Dungeon.hero;
+
+            hero.dispelInvisibility();
+            hero.onArtifactUsed();
+            hero.spendAndNext(1f);
+        }
+
+        @Override
+        public String prompt() {
+            return Messages.get(Detonator.class, "set_trap_prompt");
         }
     };
 

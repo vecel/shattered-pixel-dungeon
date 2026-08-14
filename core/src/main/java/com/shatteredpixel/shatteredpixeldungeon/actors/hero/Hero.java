@@ -2634,4 +2634,12 @@ public class Hero extends Char {
 	public static interface Doom {
 		public void onDeath();
 	}
+
+	public void onArtifactUsed() {
+		Talent.onArtifactUsed(this);
+	}
+
+	public boolean withinFieldOfView(int cell) {
+		return Dungeon.level.heroFOV[cell];
+	}
 }
