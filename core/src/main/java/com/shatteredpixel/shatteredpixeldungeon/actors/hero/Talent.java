@@ -200,7 +200,13 @@ public enum Talent {
 	//universal T4
 	HEROIC_ENERGY(26, 4), //See icon() and title() for special logic for this one
 	//Ratmogrify T4
-	RATSISTANCE(215, 4), RATLOMACY(216, 4), RATFORCEMENTS(217, 4);
+	RATSISTANCE(215, 4), RATLOMACY(216, 4), RATFORCEMENTS(217, 4),
+
+	// Sapper T1
+	DETONATING_MEAL(215), TRAP_EXPERT(215), I_CAN_FIGHT_TOO(215), LAST_KABOOM(215),
+	// Sapper T2
+	EXTENDED_RANGE(215), QUICK_REACTION(215), TRAP_SENSE(215);
+
 
 	public static class ImprovisedProjectileCooldown extends FlavourBuff{
 		public int icon() { return BuffIndicator.TIME; }
@@ -991,6 +997,9 @@ public enum Talent {
 			case CLERIC:
 				Collections.addAll(tierTalents, SATIATED_SPELLS, HOLY_INTUITION, SEARING_LIGHT, SHIELD_OF_LIGHT);
 				break;
+			case SAPPER:
+				Collections.addAll(tierTalents, DETONATING_MEAL, TRAP_EXPERT, I_CAN_FIGHT_TOO, LAST_KABOOM);
+				break;
 		}
 		for (Talent talent : tierTalents){
 			if (replacements.containsKey(talent)){
@@ -1020,6 +1029,8 @@ public enum Talent {
 			case CLERIC:
 				Collections.addAll(tierTalents, ENLIGHTENING_MEAL, RECALL_INSCRIPTION, SUNRAY, DIVINE_SENSE, BLESS);
 				break;
+			case SAPPER:
+				Collections.addAll(tierTalents, EXTENDED_RANGE, QUICK_REACTION, TRAP_SENSE);
 		}
 		for (Talent talent : tierTalents){
 			if (replacements.containsKey(talent)){
