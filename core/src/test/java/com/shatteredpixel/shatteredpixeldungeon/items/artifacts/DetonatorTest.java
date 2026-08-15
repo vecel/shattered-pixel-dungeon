@@ -2,6 +2,7 @@ package com.shatteredpixel.shatteredpixeldungeon.items.artifacts;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -19,10 +20,12 @@ import com.shatteredpixel.shatteredpixeldungeon.fakes.app.GdxApplicationExtensio
 import com.shatteredpixel.shatteredpixeldungeon.fakes.logger.GameLoggerFake;
 import com.shatteredpixel.shatteredpixeldungeon.fakes.logger.LogEntry;
 import com.shatteredpixel.shatteredpixeldungeon.fakes.logger.LogLevel;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.CellSelector;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,6 +42,7 @@ class DetonatorTest {
     private Detonator detonator;
     private Hero mockHero;
     private DungeonInterface mockDungeon;
+    private CharSprite mockSprite;
     private Trap mockTrap;
     private GameLoggerFake loggerFake;
 
@@ -47,9 +51,9 @@ class DetonatorTest {
 
     @BeforeEach
     void setUp() {
-
         mockHero = mock(Hero.class);
         mockDungeon = mock(DungeonInterface.class);
+        mockSprite = mock(CharSprite.class);
         mockTrap = mock(Trap.class);
         loggerFake = new GameLoggerFake();
 
@@ -59,9 +63,13 @@ class DetonatorTest {
         doReturn(true).when(detonator).isEquipped(mockHero);
         doNothing().when(detonator).callExecuteSuper(any(), any());
 
-        when(mockHero.withinFieldOfView(any(Integer.class))).thenReturn(true);
+        mockHero.sprite = mockSprite;
+
         when(mockDungeon.getTrap(any(Integer.class))).thenReturn(mockTrap);
         when(mockDungeon.isCellEmpty(any(Integer.class))).thenReturn(true);
+        when(mockHero.withinFieldOfView(any(Integer.class))).thenReturn(true);
+
+        doNothing().when(mockSprite).operate(1);
     }
 
     @Test
@@ -190,6 +198,8 @@ class DetonatorTest {
         listener.onSelect(1);
 
         assertEquals(4, trueDetonator.charge);
+        verify(mockDungeon, times(1)).setTrap(any(Trap.class), eq(1));
+        verify(mockSprite, times(1)).operate(1);
         verify(mockHero, times(1)).dispelInvisibility();
         verify(mockHero, times(1)).onArtifactUsed();
         verify(mockHero, times(1)).spendAndNext(1f);
@@ -228,6 +238,7 @@ class DetonatorTest {
 
         verify(mockDungeon, never()).setTrap(any(Trap.class), any(Integer.class));
     }
+
 
     @Test
     void has_recharging_passive_buff() {
