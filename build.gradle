@@ -9,7 +9,6 @@ buildscript {
 }
 
 allprojects {
-
     ext {
         appName = 'Shattered Pixel Dungeon'
         appPackageName = 'com.shatteredpixel.shatteredpixeldungeon'
@@ -34,5 +33,4 @@ allprojects {
         mavenCentral()
         maven { url 'https://central.sonatype.com/repository/maven-snapshots/' }
     }
-
 }

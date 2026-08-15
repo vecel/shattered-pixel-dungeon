@@ -1093,17 +1093,4 @@ public class Dungeon {
 		return step;
 
 	}
-
-	public static Trap getTrap(int cell) {
-		return level.traps.get(cell);
-	}
-
-	public static void setTrap(Trap trap, int cell) {
-		Painter.set(level, cell, Terrain.TRAP);
-		level.setTrap(trap, cell);
-	}
-
-	public static boolean isCellEmpty(int cell) {
-		return level.map[cell] == Terrain.EMPTY;
-	}
 }

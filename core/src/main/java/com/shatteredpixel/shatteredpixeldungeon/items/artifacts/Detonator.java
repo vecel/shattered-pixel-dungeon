@@ -1,6 +1,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.items.artifacts;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.DungeonInterface;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MagicImmune;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Regeneration;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
@@ -13,6 +14,7 @@ import com.shatteredpixel.shatteredpixeldungeon.scenes.CellSelector;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GameLogger;
 
 import java.util.ArrayList;
 
@@ -31,60 +33,74 @@ public class Detonator extends Artifact {
         unique = true;
     }
 
-    public static final String AC_DETONATE = "DETONATE";
+    public static final String AC_ACTIVATE = "ACTIVATE";
     public static final String AC_SET_TRAP = "SET_TRAP";
+
+    public Detonator() {}
+
+    Detonator(GameLogger logger, DungeonInterface dungeon) {
+        super(logger, dungeon);
+    }
 
     @Override
     public ArrayList<String> actions(Hero hero) {
         ArrayList<String> actions = super.actions( hero );
         if (isEquipped( hero ) && !cursed && hero.buff(MagicImmune.class) == null) {
             actions.add(AC_SET_TRAP);
-            actions.add(AC_DETONATE);
+            actions.add(AC_ACTIVATE);
         }
         return actions;
     }
 
     @Override
-    public void execute( Hero hero, String action ) {
-        super.execute(hero, action);
+    public void execute(Hero hero, String action) {
+        callExecuteSuper(hero, action);
 
         if (hero.buff(MagicImmune.class) != null) return;
 
         if (!isEquipped(hero)) {
-            GLog.i(Messages.get(Artifact.class, "need_to_equip"));
-            return;
-        }
-        if (cursed) {
-            GLog.i( Messages.get(this, "cursed") );
+            logger.info(Messages.get(Artifact.class, "need_to_equip"));
             return;
         }
 
-        if (action.equals(AC_DETONATE)) {
-            GameScene.selectCell(activationSelector);
+        if (cursed) {
+            logger.warning(Messages.get(Detonator.class, "cursed"));
+            return;
+        }
+
+        if (action.equals(AC_ACTIVATE)) {
+            GameScene.selectCell(activationSelector.init(hero));
         }
 
         if (action.equals(AC_SET_TRAP)) {
-            GameScene.selectCell(setTrapSelector);
+            GameScene.selectCell(setTrapSelector.init(hero));
         }
     }
 
-    private final CellSelector.Listener activationSelector = new CellSelector.Listener() {
+    private abstract static class DetonatorSelector extends CellSelector.Listener {
+        protected Hero hero;
+        protected DetonatorSelector init(Hero hero) {
+            this.hero = hero;
+            return this;
+        }
+    }
+
+    private final DetonatorSelector activationSelector = new DetonatorSelector() {
 
         @Override
         public void onSelect(Integer cell) {
             if (cell == null) return;
 
-            Hero hero = Dungeon.hero;
             if (!hero.withinFieldOfView(cell)) return;
 
-            Trap trap = Dungeon.getTrap(cell);
+            Trap trap = dungeon.getTrap(cell);
             if (trap == null) {
-                GLog.i(Messages.get(Detonator.class, "activate_no_trap"));
+                logger.info(Messages.get(Detonator.class, "activate_no_trap"));
                 return;
             }
 
             if (charge <= 1) {
-                GLog.i(Messages.get(Detonator.class, "activate_no_charge"));
+                logger.info(Messages.get(Detonator.class, "activate_no_charge"));
                 return;
             }
 
@@ -102,24 +118,27 @@ public class Detonator extends Artifact {
         }
     };
 
-    private final CellSelector.Listener setTrapSelector = new CellSelector.Listener() {
+    private final DetonatorSelector setTrapSelector = new DetonatorSelector() {
         @Override
         public void onSelect(Integer cell) {
             if (cell == null) return;
-            if (!Dungeon.isCellEmpty(cell)) return;
+
+            if (!hero.withinFieldOfView(cell)) return;
+
+            if (!dungeon.isCellEmpty(cell)) return;
 
             if (charge <= 0) {
-                GLog.i(Messages.get(Detonator.class, "set_trap_no_charge"));
+                logger.info(Messages.get(Detonator.class, "set_trap_no_charge"));
                 return;
             }
 
             charge -= 1;
 
             // TODO: change trap type
-            Dungeon.setTrap(new WornDartTrap(), cell);
+            dungeon.setTrap(new WornDartTrap(), cell);
 
-            Hero hero = Dungeon.hero;
-
+            hero.sprite.operate(cell);
+            hero.busy();
             hero.dispelInvisibility();
             hero.onArtifactUsed();
             hero.spendAndNext(1f);
@@ -155,9 +174,6 @@ public class Detonator extends Artifact {
                     float turnsToCharge = (45 - missing);
                     turnsToCharge /= RingOfEnergy.artifactChargeMultiplier(target);
                     float chargeToGain = (1f / turnsToCharge);
-                    if (!isEquipped(Dungeon.hero)){
-                        chargeToGain *= 0.75f*Dungeon.hero.pointsInTalent(Talent.LIGHT_CLOAK)/3f;
-                    }
                     partialCharge += chargeToGain;
                 }
 
@@ -183,5 +199,9 @@ public class Detonator extends Artifact {
             return true;
         }
 
+    }
+
+    protected void callExecuteSuper(Hero hero, String action) {
+        super.execute(hero, action);
     }
 }
