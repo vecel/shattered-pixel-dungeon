@@ -9,31 +9,22 @@ import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 public class DungeonAdapter implements DungeonInterface {
 
     @Override
-    public void setLevel(Level level) {
-        Dungeon.level = level;
-    }
-
-    @Override
-    public Level getLevel() {
-        return Dungeon.level;
-    }
-
-    @Override
     public Trap getTrap(int cell) {
-        return getLevel().traps.get(cell);
+        return Dungeon.level.traps.get(cell);
     }
 
     @Override
     public void setTrap(Trap trap, int cell) {
-        Level level = getLevel();
+        Level level = Dungeon.level;
         Painter.set(level, cell, Terrain.TRAP);
         level.setTrap(trap, cell);
+        Level.set(cell, Terrain.TRAP);
         GameScene.updateMap(cell);
     }
 
     @Override
     public boolean isCellEmpty(int cell) {
-        return getLevel().map[cell] == Terrain.EMPTY;
+        return Dungeon.level.map[cell] == Terrain.EMPTY;
     }
 
 

@@ -1068,15 +1068,6 @@ public abstract class Level implements Bundlable {
 		}
 		trap.set( pos );
 		traps.put( pos, trap );
-
-		if (!trap.active) {
-			set(pos, Terrain.INACTIVE_TRAP);
-		} else if (trap.visible) {
-			set(pos, Terrain.TRAP);
-		} else {
-			set(pos, Terrain.SECRET_TRAP);
-		}
-
 		GameScene.updateMap( pos );
 		return trap;
 	}
