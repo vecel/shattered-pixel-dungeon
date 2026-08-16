@@ -29,7 +29,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.items.bombs.Bomb;
 import com.watabou.utils.PathFinder;
 
-// TODO: Add damage modifier when triggered with detonator
+// TODO Mateusz: Add damage modifier when triggered with detonator
 public class ExplosiveTrap extends Trap {
 
 	{

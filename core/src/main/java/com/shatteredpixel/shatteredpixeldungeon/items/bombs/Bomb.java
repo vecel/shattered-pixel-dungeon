@@ -34,6 +34,9 @@ import com.shatteredpixel.shatteredpixeldungeon.effects.particles.SmokeParticle;
 import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.Recipe;
+import com.shatteredpixel.shatteredpixeldungeon.items.bombs.explosion.ExplosionResult;
+import com.shatteredpixel.shatteredpixeldungeon.items.bombs.explosion.ExplosionStrategy;
+import com.shatteredpixel.shatteredpixeldungeon.items.bombs.explosion.SquareExplosionStrategy;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfFrost;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfInvisibility;
@@ -53,9 +56,7 @@ import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 import com.watabou.noosa.audio.Sample;
-import com.watabou.utils.BArray;
 import com.watabou.utils.Bundle;
-import com.watabou.utils.PathFinder;
 import com.watabou.utils.Random;
 import com.watabou.utils.Reflection;
 
@@ -136,6 +137,10 @@ public class Bomb extends Item {
 	}
 
 	public void explode(int cell){
+		explode(cell, new SquareExplosionStrategy(explosionRange()));
+	}
+
+	public void explode(int cell, ExplosionStrategy strategy) {
 		//We're blowing up, so no need for a fuse anymore.
 		if (fuse != null) {
 			fuse.snuff();
@@ -145,30 +150,15 @@ public class Bomb extends Item {
 		Sample.INSTANCE.play( Assets.Sounds.BLAST );
 
 		if (explodesDestructively()) {
-
-			ArrayList<Integer> affectedCells = new ArrayList<>();
-			ArrayList<Char> affectedChars = new ArrayList<>();
-			
 			if (Dungeon.level.heroFOV[cell]) {
 				CellEmitter.center(cell).burst(BlastParticle.FACTORY, 30);
 			}
-			
-			boolean terrainAffected = false;
-			boolean[] explodable = new boolean[Dungeon.level.length()];
-			BArray.not( Dungeon.level.solid, explodable);
-			BArray.or( Dungeon.level.flamable, explodable, explodable);
-			PathFinder.buildDistanceMap( cell, explodable, explosionRange() );
-			for (int i = 0; i < PathFinder.distance.length; i++) {
-				if (PathFinder.distance[i] != Integer.MAX_VALUE) {
-					affectedCells.add(i);
-					Char ch = Actor.findChar(i);
-					if (ch != null) {
-						affectedChars.add(ch);
-					}
-				}
-			}
 
-			for (int i : affectedCells){
+			boolean terrainAffected = false;
+
+			ExplosionResult result = strategy.calculateExplosionArea(cell);
+
+			for (int i : result.affectedCells){
 				if (Dungeon.level.heroFOV[i]) {
 					CellEmitter.get(i).burst(SmokeParticle.FACTORY, 4);
 				}
@@ -185,8 +175,8 @@ public class Bomb extends Item {
 					heap.explode();
 				}
 			}
-			
-			for (Char ch : affectedChars){
+
+			for (Char ch : result.affectedChars){
 
 				//if they have already been killed by another bomb
 				if(!ch.isAlive()){
@@ -199,7 +189,7 @@ public class Bomb extends Item {
 				if (dmg > 0) {
 					ch.damage(dmg, this);
 				}
-				
+
 				if (ch == Dungeon.hero && !ch.isAlive()) {
 					if (this instanceof ConjuredBomb){
 						Badges.validateDeathFromFriendlyMagic();
@@ -208,7 +198,7 @@ public class Bomb extends Item {
 					Dungeon.fail(this);
 				}
 			}
-			
+
 			if (terrainAffected) {
 				Dungeon.observe();
 			}

@@ -46,8 +46,10 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbili
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.Ratmogrify;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.DivineSense;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.RecallInscription;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.talents.ExplodingScrollsTalent;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.talents.FoodTalentHandler;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.talents.SappersMealTalent;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.talents.ScrollTalentHandler;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Flare;
@@ -59,7 +61,6 @@ import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClothArmor;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.CloakOfShadows;
-import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Detonator;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HornOfPlenty;
 import com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring;
@@ -210,10 +211,14 @@ public enum Talent {
 	// Sapper T1
 	SAPPERS_MEAL(192), TRAP_EXPERT(193), I_CAN_FIGHT_TOO(194), LAST_KABOOM(195),
 	// Sapper T2
-	EXTENDED_RANGE(215), QUICK_ACTIVATION(215), TRAP_SENSE(215);
+	EXPLODING_SCROLLS(197), QUICK_ACTIVATION(215), TRAP_SENSE(215);
 
 	private static final Map<Talent, FoodTalentHandler> foodHandlers = new EnumMap<>(Map.of(
 			SAPPERS_MEAL, new SappersMealTalent()
+	));
+
+	private static final Map<Talent, ScrollTalentHandler> scrollHandlers = new EnumMap<>(Map.of(
+			EXPLODING_SCROLLS, new ExplodingScrollsTalent()
 	));
 
 
@@ -802,6 +807,13 @@ public enum Talent {
 				}
 			}
 		}
+
+		for (Talent talent : hero.getTalents()) {
+			ScrollTalentHandler handler = scrollHandlers.get(talent);
+			if (handler == null) continue;
+
+			handler.handleScrollRead(hero, pos, cls);
+		}
 	}
 
 	public static void onRunestoneUsed( Hero hero, int pos, Class<?extends Item> cls ){
@@ -1054,7 +1066,7 @@ public enum Talent {
 				Collections.addAll(tierTalents, ENLIGHTENING_MEAL, RECALL_INSCRIPTION, SUNRAY, DIVINE_SENSE, BLESS);
 				break;
 			case SAPPER:
-				Collections.addAll(tierTalents, EXTENDED_RANGE, QUICK_ACTIVATION, TRAP_SENSE);
+				Collections.addAll(tierTalents, EXPLODING_SCROLLS, QUICK_ACTIVATION, TRAP_SENSE);
 		}
 		for (Talent talent : tierTalents){
 			if (replacements.containsKey(talent)){

@@ -5,6 +5,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MagicImmune;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Regeneration;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfEnergy;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.WornDartTrap;
@@ -19,6 +20,8 @@ import com.shatteredpixel.shatteredpixeldungeon.utils.GameLogger;
 
 import java.util.ArrayList;
 
+/// TODO:
+/// 1. Set quickslot action to trap activation
 public class Detonator extends Artifact {
 
     private final TrapModifierProvider trapModifierProvider;
@@ -118,6 +121,8 @@ public class Detonator extends Artifact {
             DamageModifier modifier = trapModifierProvider.getModifierFor(hero);
             trap.trigger(modifier);
 
+            gainExp(10);
+
             hero.dispelInvisibility();
             hero.onArtifactUsed();
 
@@ -175,6 +180,13 @@ public class Detonator extends Artifact {
 
         gainCharges(amount);
         updateQuickslot();
+    }
+
+    @Override
+    public Item upgrade() {
+        chargeCap = Math.min(chargeCap + 1, 10);
+        logger.positive(Messages.get(Detonator.class, "level_up"));
+        return super.upgrade();
     }
 
     @Override
@@ -244,6 +256,16 @@ public class Detonator extends Artifact {
     private void handleTrapActivation(Hero hero) {
         if (!hero.hasTalent(Talent.I_CAN_FIGHT_TOO)) return;
         hero.applyBuff(Talent.ICanFightTooTracker.class);
+    }
+
+    private void gainExp(int value) {
+        exp += value;
+        if (exp >=  50 && level() < levelCap) {
+            upgrade();
+            exp -= 50;
+        }
+
+        updateQuickslot();
     }
 
     protected void callExecuteSuper(Hero hero, String action) {
