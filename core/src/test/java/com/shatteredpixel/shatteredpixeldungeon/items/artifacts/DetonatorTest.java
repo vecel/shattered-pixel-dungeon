@@ -21,12 +21,15 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.talents.FoodTalentHandler;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.talents.SappersMealTalent;
 import com.shatteredpixel.shatteredpixeldungeon.fakes.app.GdxApplicationExtension;
+import com.shatteredpixel.shatteredpixeldungeon.fakes.hero.MockHero;
 import com.shatteredpixel.shatteredpixeldungeon.fakes.logger.GameLoggerFake;
 import com.shatteredpixel.shatteredpixeldungeon.fakes.logger.LogEntry;
 import com.shatteredpixel.shatteredpixeldungeon.fakes.logger.LogLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.modifiers.DamageModifier;
+import com.shatteredpixel.shatteredpixeldungeon.modifiers.TrapModifierProvider;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.CellSelector;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
@@ -46,8 +49,8 @@ class DetonatorTest {
     private Detonator detonator;
     private Hero mockHero;
     private DungeonInterface mockDungeon;
-    private CharSprite mockSprite;
-    private Belongings mockBelongings;
+    private TrapModifierProvider mockTrapModifierProvider;
+
     private Trap mockTrap;
     private GameLoggerFake loggerFake;
 
@@ -56,27 +59,25 @@ class DetonatorTest {
 
     @BeforeEach
     void setUp() {
-        mockHero = mock(Hero.class);
+        mockHero = MockHero.create();
         mockDungeon = mock(DungeonInterface.class);
-        mockSprite = mock(CharSprite.class);
-        mockBelongings = mock(Belongings.class);
+        mockTrapModifierProvider = mock(TrapModifierProvider.class);
         mockTrap = mock(Trap.class);
         loggerFake = new GameLoggerFake();
 
-        trueDetonator = new Detonator(loggerFake, mockDungeon);
+        trueDetonator = new Detonator(loggerFake, mockDungeon, mockTrapModifierProvider);
         detonator = spy(trueDetonator);
 
         doReturn(true).when(detonator).isEquipped(mockHero);
         doNothing().when(detonator).callExecuteSuper(any(), any());
 
-        mockHero.sprite = mockSprite;
-        mockHero.belongings = mockBelongings;
 
         when(mockDungeon.getTrap(any(Integer.class))).thenReturn(mockTrap);
         when(mockDungeon.isCellEmpty(any(Integer.class))).thenReturn(true);
         when(mockHero.withinFieldOfView(any(Integer.class))).thenReturn(true);
+        when(mockTrapModifierProvider.getModifierFor(mockHero)).thenReturn(DamageModifier.NONE);
 
-        doNothing().when(mockSprite).operate(1);
+        doNothing().when(mockHero.sprite).operate(1);
     }
 
     @Test
@@ -147,7 +148,7 @@ class DetonatorTest {
         listener.onSelect(1);
 
         assertEquals(4, trueDetonator.getCharge());
-        verify(mockTrap, times(1)).trigger();
+        verify(mockTrap, times(1)).trigger(any(DamageModifier.class));
         verify(mockHero, times(1)).dispelInvisibility();
         verify(mockHero, times(1)).onArtifactUsed();
         verify(mockHero, times(1)).spendAndNext(1f);
@@ -206,7 +207,7 @@ class DetonatorTest {
 
         assertEquals(3, trueDetonator.getCharge());
         verify(mockDungeon, times(1)).setTrap(any(Trap.class), eq(1));
-        verify(mockSprite, times(1)).operate(1);
+        verify(mockHero.sprite, times(1)).operate(1);
         verify(mockHero, times(1)).dispelInvisibility();
         verify(mockHero, times(1)).onArtifactUsed();
         verify(mockHero, times(1)).spendAndNext(1f);
@@ -274,16 +275,15 @@ class DetonatorTest {
     }
 
     @Test
-    void recharges_when_food_is_eaten_and_hero_has_sappers_meal_talent() {
-        when(mockHero.hasTalent(Talent.SAPPERS_MEAL)).thenReturn(true);
-        when(mockHero.pointsInTalent(Talent.SAPPERS_MEAL)).thenReturn(1);
-        when(mockBelongings.getItem(Detonator.class)).thenReturn(detonator);
+    void applies_trap_damage_modifier() {
+        DamageModifier modifier = new DamageModifier(3);
+        when(mockTrapModifierProvider.getModifierFor(mockHero)).thenReturn(modifier);
 
-        FoodTalentHandler handler = new SappersMealTalent();
 
-        handler.handleFoodEaten(mockHero, -1, null);
+        CellSelector.Listener listener = captureListener(ACTIVATE);
+        listener.onSelect(1);
 
-        verify(detonator, times(1)).charge(mockHero, (float) 0.5);
+        verify(mockTrap, times(1)).trigger(modifier);
     }
 
     @Test

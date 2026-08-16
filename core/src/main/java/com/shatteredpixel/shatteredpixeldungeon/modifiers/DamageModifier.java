@@ -1,9 +1,10 @@
 package com.shatteredpixel.shatteredpixeldungeon.modifiers;
 
 public class DamageModifier {
-
 	private final int modifier;
 	private final float multiplier;
+
+	public static final DamageModifier NONE = new DamageModifier();
 
 	public DamageModifier() {
 		this.modifier = 0;
@@ -22,5 +23,13 @@ public class DamageModifier {
 
 	public int apply(int damage) {
 		return Math.max(0, Math.round((damage + modifier) * multiplier));
+	}
+
+	public int getModifier() {
+		return modifier;
+	}
+
+	public float getMultiplier() {
+		return multiplier;
 	}
 }

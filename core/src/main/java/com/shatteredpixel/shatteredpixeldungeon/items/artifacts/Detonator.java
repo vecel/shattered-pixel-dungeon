@@ -1,28 +1,27 @@
 package com.shatteredpixel.shatteredpixeldungeon.items.artifacts;
 
-import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.DungeonInterface;
-import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Barrier;
-import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MagicImmune;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Regeneration;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
-import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
 import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfEnergy;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.WornDartTrap;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.modifiers.DamageModifier;
+import com.shatteredpixel.shatteredpixeldungeon.modifiers.TrapModifierProvider;
+import com.shatteredpixel.shatteredpixeldungeon.modifiers.TrapModifierProviderAdapter;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.CellSelector;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
-import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GameLogger;
 
 import java.util.ArrayList;
 
 public class Detonator extends Artifact {
+
+    private final TrapModifierProvider trapModifierProvider;
 
     {
         image = ItemSpriteSheet.ARTIFACT_DETONATOR;
@@ -41,10 +40,14 @@ public class Detonator extends Artifact {
     public static final String AC_SET_TRAP = "SET_TRAP";
 
 
-    public Detonator() {}
+    public Detonator() {
+        super();
+        this.trapModifierProvider = new TrapModifierProviderAdapter();
+    }
 
-    Detonator(GameLogger logger, DungeonInterface dungeon) {
+    Detonator(GameLogger logger, DungeonInterface dungeon, TrapModifierProvider trapModifierProvider) {
         super(logger, dungeon);
+        this.trapModifierProvider = trapModifierProvider;
     }
 
     @Override
@@ -112,7 +115,7 @@ public class Detonator extends Artifact {
 
             spendCharges(ACTIVATE_CHARGE);
 
-            DamageModifier modifier = getTrapDamageModifier(hero);
+            DamageModifier modifier = trapModifierProvider.getModifierFor(hero);
             trap.trigger(modifier);
 
             hero.dispelInvisibility();
@@ -241,13 +244,6 @@ public class Detonator extends Artifact {
     private void handleTrapActivation(Hero hero) {
         if (!hero.hasTalent(Talent.I_CAN_FIGHT_TOO)) return;
         hero.applyBuff(Talent.ICanFightTooTracker.class);
-    }
-
-    private DamageModifier getTrapDamageModifier(Hero hero) {
-        int points = hero.pointsInTalent(Talent.TRAP_EXPERT);
-        if (points == 0) return new DamageModifier();
-
-        return new DamageModifier(points + 1);
     }
 
     protected void callExecuteSuper(Hero hero, String action) {
