@@ -187,6 +187,8 @@ import com.watabou.utils.Random;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 public class Hero extends Char {
 
@@ -207,6 +209,7 @@ public class Hero extends Char {
 	public HeroClass heroClass = HeroClass.ROGUE;
 	public HeroSubClass subClass = HeroSubClass.NONE;
 	public ArmorAbility armorAbility = null;
+
 	public ArrayList<LinkedHashMap<Talent, Integer>> talents = new ArrayList<>();
 	public LinkedHashMap<Talent, Talent> metamorphedTalents = new LinkedHashMap<>();
 	
@@ -222,7 +225,7 @@ public class Hero extends Char {
 	private Char attackTarget;
 	
 	public boolean resting = false;
-	
+
 	public Belongings belongings;
 	
 	public int STR;
@@ -417,6 +420,14 @@ public class Hero extends Char {
 	public void applyShielding(int value) {
 		Buff.affect(this, Barrier.class).setShield(value);
 		sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(value), FloatingText.SHIELDING);
+	}
+
+	public List<Talent> getTalents() {
+		List<Talent> talents = new ArrayList<>();
+		for (Map<Talent, Integer> talentMap : this.talents) {
+			talents.addAll(talentMap.keySet());
+		}
+		return talents;
 	}
 
 	public String className() {

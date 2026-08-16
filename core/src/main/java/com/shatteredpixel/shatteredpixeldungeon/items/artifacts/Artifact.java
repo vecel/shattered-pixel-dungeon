@@ -53,7 +53,6 @@ public class Artifact extends KindofMisc {
 	protected int levelCap = 0;
 
 	//the current artifact charge
-	@Deprecated(since = "3.3.8. Use getter and setter instead of modifying directly")
 	protected int charge = 0;
 	//the build towards next charge, usually rolls over at 1.
 	//better to keep charge as an int and use a separate float than casting.
@@ -252,7 +251,7 @@ public class Artifact extends KindofMisc {
 		return charge;
 	}
 
-	public void setCharge(int charge) {
+	protected void setCharge(int charge) {
 		this.charge = charge;
 	}
 
@@ -262,6 +261,21 @@ public class Artifact extends KindofMisc {
 
 	public void spendCharges(int value) {
 		charge -= value;
+	}
+
+	protected void gainCharges(float value) {
+		if (charge >= chargeCap) return;
+
+		partialCharge += value;
+		while (partialCharge >= 1f) {
+			charge++;
+			partialCharge--;
+		}
+
+		if (charge >= chargeCap){
+			partialCharge = 0;
+			charge = chargeCap;
+		}
 	}
 
 	protected ArtifactBuff passiveBuff() {

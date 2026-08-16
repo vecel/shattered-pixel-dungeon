@@ -46,6 +46,8 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbili
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.Ratmogrify;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.DivineSense;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.RecallInscription;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.talents.FoodTalentHandler;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.talents.SappersMealTalent;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Flare;
@@ -57,6 +59,7 @@ import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClothArmor;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.CloakOfShadows;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Detonator;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HornOfPlenty;
 import com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring;
@@ -89,9 +92,11 @@ import com.watabou.utils.Reflection;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 public enum Talent {
 
@@ -203,9 +208,13 @@ public enum Talent {
 	RATSISTANCE(215, 4), RATLOMACY(216, 4), RATFORCEMENTS(217, 4),
 
 	// Sapper T1
-	DETONATING_MEAL(215), TRAP_EXPERT(215), I_CAN_FIGHT_TOO(215), LAST_KABOOM(215),
+	SAPPERS_MEAL(192), TRAP_EXPERT(193), I_CAN_FIGHT_TOO(194), LAST_KABOOM(195),
 	// Sapper T2
-	EXTENDED_RANGE(215), QUICK_REACTION(215), TRAP_SENSE(215);
+	EXTENDED_RANGE(215), QUICK_ACTIVATION(215), TRAP_SENSE(215);
+
+	private static final Map<Talent, FoodTalentHandler> foodHandlers = new EnumMap<>(Map.of(
+			SAPPERS_MEAL, new SappersMealTalent()
+	));
 
 
 	public static class ImprovisedProjectileCooldown extends FlavourBuff{
@@ -680,6 +689,13 @@ public enum Talent {
 			ScrollOfRecharging.charge( hero );
 			SpellSprite.show(hero, SpellSprite.CHARGE, 0, 1, 1);
 		}
+
+		for (Talent talent : hero.getTalents()) {
+			FoodTalentHandler handler = foodHandlers.get(talent);
+			if (handler == null) continue;
+
+			handler.handleFoodEaten(hero, foodVal, foodSource);
+		}
 	}
 
 	public static class WarriorFoodImmunity extends FlavourBuff{
@@ -1006,7 +1022,7 @@ public enum Talent {
 				Collections.addAll(tierTalents, SATIATED_SPELLS, HOLY_INTUITION, SEARING_LIGHT, SHIELD_OF_LIGHT);
 				break;
 			case SAPPER:
-				Collections.addAll(tierTalents, DETONATING_MEAL, TRAP_EXPERT, I_CAN_FIGHT_TOO, LAST_KABOOM);
+				Collections.addAll(tierTalents, SAPPERS_MEAL, TRAP_EXPERT, I_CAN_FIGHT_TOO, LAST_KABOOM);
 				break;
 		}
 		for (Talent talent : tierTalents){
@@ -1038,7 +1054,7 @@ public enum Talent {
 				Collections.addAll(tierTalents, ENLIGHTENING_MEAL, RECALL_INSCRIPTION, SUNRAY, DIVINE_SENSE, BLESS);
 				break;
 			case SAPPER:
-				Collections.addAll(tierTalents, EXTENDED_RANGE, QUICK_REACTION, TRAP_SENSE);
+				Collections.addAll(tierTalents, EXTENDED_RANGE, QUICK_ACTIVATION, TRAP_SENSE);
 		}
 		for (Talent talent : tierTalents){
 			if (replacements.containsKey(talent)){
@@ -1234,5 +1250,4 @@ public enum Talent {
 			}
 		}
 	}
-
 }

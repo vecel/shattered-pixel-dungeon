@@ -167,6 +167,14 @@ public class Detonator extends Artifact {
     };
 
     @Override
+    public void charge(Hero target, float amount) {
+        if (cursed || target.hasBuff(MagicImmune.class)) return;
+
+        gainCharges(amount);
+        updateQuickslot();
+    }
+
+    @Override
     protected ArtifactBuff passiveBuff() {
         return new DetonatorRecharge();
     }

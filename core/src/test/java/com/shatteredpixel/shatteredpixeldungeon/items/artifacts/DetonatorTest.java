@@ -15,8 +15,11 @@ import static org.mockito.Mockito.when;
 
 import com.shatteredpixel.shatteredpixeldungeon.DungeonInterface;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MagicImmune;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Belongings;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.talents.FoodTalentHandler;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.talents.SappersMealTalent;
 import com.shatteredpixel.shatteredpixeldungeon.fakes.app.GdxApplicationExtension;
 import com.shatteredpixel.shatteredpixeldungeon.fakes.logger.GameLoggerFake;
 import com.shatteredpixel.shatteredpixeldungeon.fakes.logger.LogEntry;
@@ -44,6 +47,7 @@ class DetonatorTest {
     private Hero mockHero;
     private DungeonInterface mockDungeon;
     private CharSprite mockSprite;
+    private Belongings mockBelongings;
     private Trap mockTrap;
     private GameLoggerFake loggerFake;
 
@@ -55,6 +59,7 @@ class DetonatorTest {
         mockHero = mock(Hero.class);
         mockDungeon = mock(DungeonInterface.class);
         mockSprite = mock(CharSprite.class);
+        mockBelongings = mock(Belongings.class);
         mockTrap = mock(Trap.class);
         loggerFake = new GameLoggerFake();
 
@@ -65,6 +70,7 @@ class DetonatorTest {
         doNothing().when(detonator).callExecuteSuper(any(), any());
 
         mockHero.sprite = mockSprite;
+        mockHero.belongings = mockBelongings;
 
         when(mockDungeon.getTrap(any(Integer.class))).thenReturn(mockTrap);
         when(mockDungeon.isCellEmpty(any(Integer.class))).thenReturn(true);
@@ -265,6 +271,19 @@ class DetonatorTest {
         listener.onSelect(1);
 
         verify(mockHero, times(1)).applyBuff(Talent.ICanFightTooTracker.class);
+    }
+
+    @Test
+    void recharges_when_food_is_eaten_and_hero_has_sappers_meal_talent() {
+        when(mockHero.hasTalent(Talent.SAPPERS_MEAL)).thenReturn(true);
+        when(mockHero.pointsInTalent(Talent.SAPPERS_MEAL)).thenReturn(1);
+        when(mockBelongings.getItem(Detonator.class)).thenReturn(detonator);
+
+        FoodTalentHandler handler = new SappersMealTalent();
+
+        handler.handleFoodEaten(mockHero, -1, null);
+
+        verify(detonator, times(1)).charge(mockHero, (float) 0.5);
     }
 
     @Test
