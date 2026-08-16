@@ -408,7 +408,17 @@ public class Hero extends Char {
 			return 0;
 		}
 	}
-	
+
+	public void applyHealing(int value) {
+		HP = Math.min(HP + value, HT);
+		sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(value), FloatingText.HEALING);
+	}
+
+	public void applyShielding(int value) {
+		Buff.affect(this, Barrier.class).setShield(value);
+		sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(value), FloatingText.SHIELDING);
+	}
+
 	public String className() {
 		return subClass == null || subClass == HeroSubClass.NONE ? heroClass.title() : subClass.title();
 	}

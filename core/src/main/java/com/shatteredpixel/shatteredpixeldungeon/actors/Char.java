@@ -158,6 +158,8 @@ import com.watabou.utils.Bundle;
 import com.watabou.utils.PathFinder;
 import com.watabou.utils.Random;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -1152,6 +1154,7 @@ public abstract class Char extends Actor {
 		return filtered;
 	}
 
+	@Deprecated(since = "3.3.8. Use other buff related methods like hasBuff(), applyBuff().")
 	@SuppressWarnings("unchecked")
 	//returns an instance of the specific buff class, if it exists. Not just assignable
 	public synchronized  <T extends Buff> T buff( Class<T> c ) {
@@ -1161,6 +1164,19 @@ public abstract class Char extends Actor {
 			}
 		}
 		return null;
+	}
+
+	@NotNull
+	public synchronized  <T extends Buff> T getBuff(Class<T> buffClass) {
+		return buff(buffClass);
+	}
+
+	public synchronized <T extends Buff> boolean hasBuff(Class<T> buffClass) {
+		return buff(buffClass) != null;
+	}
+
+	public synchronized <T extends Buff> void applyBuff(Class<T> buffClass) {
+		Buff.affect(this, buffClass);
 	}
 
 	public synchronized boolean isCharmedBy( Char ch ) {

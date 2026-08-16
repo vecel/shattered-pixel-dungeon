@@ -435,6 +435,11 @@ public enum Talent {
 		public float iconFadePercent() { return Math.max(0, visualcooldown() / 20); }
 	}
 
+	public static class ICanFightTooTracker extends Buff {
+		{ type = Buff.buffType.POSITIVE; }
+		public int icon() { return BuffIndicator.INVERT_MARK; }
+	}
+
 	int icon;
 	int maxPoints;
 
@@ -592,9 +597,7 @@ public enum Talent {
 			//4/6 HP healed, when hero is below 33% health (with a little rounding up)
 			if (hero.HP/(float)hero.HT < 0.334f) {
 				int healing = 2 + 2 * hero.pointsInTalent(HEARTY_MEAL);
-				hero.HP = Math.min(hero.HP + healing, hero.HT);
-				hero.sprite.showStatusWithIcon(CharSprite.POSITIVE, Integer.toString(healing), FloatingText.HEALING);
-
+				hero.applyHealing(healing);
 			}
 		}
 		if (hero.hasTalent(IRON_STOMACH)){
@@ -923,6 +926,11 @@ public enum Talent {
 					&& hero.buff(DeadlyFollowupTracker.class).object == enemy.id()){
 				dmg = Math.round(dmg * (1.0f + .1f*hero.pointsInTalent(DEADLY_FOLLOWUP)));
 			}
+		}
+
+		if (hero.hasTalent(I_CAN_FIGHT_TOO) && hero.hasBuff(ICanFightTooTracker.class)) {
+			hero.getBuff(ICanFightTooTracker.class).detach();
+			dmg += hero.pointsInTalent(I_CAN_FIGHT_TOO);
 		}
 
 		return dmg;

@@ -16,6 +16,7 @@ import static org.mockito.Mockito.when;
 import com.shatteredpixel.shatteredpixeldungeon.DungeonInterface;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MagicImmune;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.fakes.app.GdxApplicationExtension;
 import com.shatteredpixel.shatteredpixeldungeon.fakes.logger.GameLoggerFake;
 import com.shatteredpixel.shatteredpixeldungeon.fakes.logger.LogEntry;
@@ -132,23 +133,23 @@ class DetonatorTest {
     }
 
     @Test
-    void activation_consumes_two_charges() {
+    void activation_consumes_one_charge() {
         // Listener operates on REAL detonator, not spied one
-        trueDetonator.charge = 5;
+        trueDetonator.setCharge(5);
 
         CellSelector.Listener listener = captureListener(ACTIVATE);
         listener.onSelect(1);
 
-        assertEquals(3, trueDetonator.charge);
-        verify(mockTrap, times(1)).activateAndDisarm();
+        assertEquals(4, trueDetonator.getCharge());
+        verify(mockTrap, times(1)).trigger();
         verify(mockHero, times(1)).dispelInvisibility();
         verify(mockHero, times(1)).onArtifactUsed();
         verify(mockHero, times(1)).spendAndNext(1f);
     }
 
     @Test
-    void does_not_activate_and_log_message__when_charge_is_too_low() {
-        trueDetonator.charge = 1;
+    void does_not_activate_and_log_message_when_charge_is_too_low() {
+        trueDetonator.setCharge(0);
 
         CellSelector.Listener listener = captureListener(ACTIVATE);
         listener.onSelect(1);
@@ -156,7 +157,7 @@ class DetonatorTest {
         LogEntry noChargeLog = new LogEntry(LogLevel.INFO, Messages.get(Detonator.class, "activate_no_charge"));
 
         assertTrue(loggerFake.contains(noChargeLog));
-        verify(mockTrap, never()).activateAndDisarm();
+        verify(mockTrap, never()).trigger();
     }
 
     @Test
@@ -169,7 +170,7 @@ class DetonatorTest {
         LogEntry noTrapLog = new LogEntry(LogLevel.INFO, Messages.get(Detonator.class, "activate_no_trap"));
 
         assertTrue(loggerFake.contains(noTrapLog));
-        verify(mockTrap, never()).activateAndDisarm();
+        verify(mockTrap, never()).trigger();
     }
 
     @Test
@@ -191,13 +192,13 @@ class DetonatorTest {
     }
 
     @Test
-    void setting_trap_consumes_one_charge() {
+    void setting_trap_consumes_two_charges() {
         CellSelector.Listener listener = captureListener(SET_TRAP);
-        trueDetonator.charge = 5;
+        trueDetonator.setCharge(5);
 
         listener.onSelect(1);
 
-        assertEquals(4, trueDetonator.charge);
+        assertEquals(3, trueDetonator.getCharge());
         verify(mockDungeon, times(1)).setTrap(any(Trap.class), eq(1));
         verify(mockSprite, times(1)).operate(1);
         verify(mockHero, times(1)).dispelInvisibility();
@@ -239,6 +240,32 @@ class DetonatorTest {
         verify(mockDungeon, never()).setTrap(any(Trap.class), any(Integer.class));
     }
 
+    @Test
+    void applies_last_kaboom_talent_effects_when_last_charge_is_spent() {
+        when(mockHero.pointsInTalent(Talent.LAST_KABOOM)).thenReturn(2);
+
+        trueDetonator.setCharge(2);
+
+        CellSelector.Listener listener = captureListener(SET_TRAP);
+        listener.onSelect(1);
+
+        int shielding = 4;
+        int healing = 2;
+
+        verify(mockHero, times(1)).applyShielding(shielding);
+        verify(mockHero, times(1)).applyHealing(healing);
+    }
+
+    @Test
+    void activating_a_trap_gives_i_can_fight_too_talent_tracker_if_hero_has_talent() {
+        when(mockHero.hasTalent(Talent.I_CAN_FIGHT_TOO)).thenReturn(true);
+        when(mockHero.pointsInTalent(Talent.I_CAN_FIGHT_TOO)).thenReturn(2);
+
+        CellSelector.Listener listener = captureListener(ACTIVATE);
+        listener.onSelect(1);
+
+        verify(mockHero, times(1)).applyBuff(Talent.ICanFightTooTracker.class);
+    }
 
     @Test
     void has_recharging_passive_buff() {
