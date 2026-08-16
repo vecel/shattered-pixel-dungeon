@@ -34,12 +34,13 @@ import com.shatteredpixel.shatteredpixeldungeon.effects.Beam;
 import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.modifiers.DamageModifier;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 import com.watabou.noosa.audio.Sample;
 import com.watabou.utils.Random;
 
-public class DisintegrationTrap extends Trap {
+public class DisintegrationTrap extends TargetTrap implements PhysicalDamageTrap {
 
 	{
 		color = VIOLET;
@@ -51,34 +52,21 @@ public class DisintegrationTrap extends Trap {
 
 	@Override
 	public void activate() {
-		Char target = Actor.findChar(pos);
+		activateWithModifier(new DamageModifier(0, 1));
+	}
 
-		//find the closest char that can be aimed at
-		//can't target beyond view distance, with a min of 6 (torch range)
-		//add 0.5 for better consistency with vision radius shape
-		float range = Math.max(6, Dungeon.level.viewDistance)+0.5f;
-		if (target == null){
-			float closestDist = Float.MAX_VALUE;
-			for (Char ch : Actor.chars()){
-				if (!ch.isAlive()) continue;
-				float curDist = Dungeon.level.trueDistance(pos, ch.pos);
-				//invis targets are considered to be at max range
-				if (ch.invisible > 0) curDist = Math.max(curDist, range);
-				Ballistica bolt = new Ballistica(pos, ch.pos, Ballistica.PROJECTILE);
-				if (bolt.collisionPos == ch.pos
-						&& ( curDist < closestDist || (curDist == closestDist && target instanceof Hero))){
-					target = ch;
-					closestDist = curDist;
-				}
-			}
-			if (closestDist > range){
-				target = null;
-			}
-		}
-		
+	@Override
+	public int getDamage() {
+		return Random.NormalIntRange(30, 50) + scalingDepth();
+	}
+
+	@Override
+	public void activateWithModifier(DamageModifier modifier) {
+		Char target = findClosestCharacter();
+
 		Heap heap = Dungeon.level.heaps.get(pos);
 		if (heap != null) heap.explode();
-		
+
 		if (target != null) {
 			if (target instanceof Mob){
 				Buff.prolong(target, Trap.HazardAssistTracker.class, HazardAssistTracker.DURATION);
@@ -88,7 +76,8 @@ public class DisintegrationTrap extends Trap {
 				ShatteredPixelDungeon.scene().add(new Beam.DeathRay(DungeonTilemap.tileCenterToWorld(pos), target.sprite.center()));
 				Sample.INSTANCE.play( Assets.Sounds.RAY );
 			}
-			target.damage( Random.NormalIntRange(30, 50) + scalingDepth(), this );
+			int dmg = getModifiedDamage(modifier);
+			target.damage(dmg, this );
 			if (target == Dungeon.hero){
 				Hero hero = (Hero)target;
 				if (!hero.isAlive()){
@@ -99,6 +88,5 @@ public class DisintegrationTrap extends Trap {
 				}
 			}
 		}
-
 	}
 }

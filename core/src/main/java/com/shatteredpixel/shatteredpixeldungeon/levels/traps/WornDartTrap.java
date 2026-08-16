@@ -33,13 +33,14 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.darts.Dart;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.modifiers.DamageModifier;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.MissileSprite;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 import com.watabou.noosa.audio.Sample;
 import com.watabou.utils.Callback;
 import com.watabou.utils.Random;
 
-public class WornDartTrap extends Trap {
+public class WornDartTrap extends TargetTrap implements PhysicalDamageTrap {
 
 	{
 		color = GREY;
@@ -51,7 +52,16 @@ public class WornDartTrap extends Trap {
 
 	@Override
 	public void activate() {
+		activateWithModifier(new DamageModifier(0, 1));
+	}
 
+	@Override
+	public int getDamage() {
+		return Random.NormalIntRange(4, 8);
+	}
+
+	@Override
+	public void activateWithModifier(DamageModifier modifier) {
 		//we handle this inside of a separate actor as the trap may produce a visual effect we need to pause for
 		Actor.add(new Actor() {
 
@@ -62,30 +72,7 @@ public class WornDartTrap extends Trap {
 			@Override
 			protected boolean act() {
 				Actor.remove(this);
-				Char target = Actor.findChar(pos);
-
-				//find the closest char that can be aimed at
-				//can't target beyond view distance, with a min of 6 (torch range)
-				//add 0.5 for better consistency with vision radius shape
-				float range = Math.max(6, Dungeon.level.viewDistance)+0.5f;
-				if (target == null){
-					float closestDist = Float.MAX_VALUE;
-					for (Char ch : Actor.chars()){
-						if (!ch.isAlive()) continue;
-						float curDist = Dungeon.level.trueDistance(pos, ch.pos);
-						//invis targets are considered to be at max range
-						if (ch.invisible > 0) curDist = Math.max(curDist, range);
-						Ballistica bolt = new Ballistica(pos, ch.pos, Ballistica.PROJECTILE);
-						if (bolt.collisionPos == ch.pos
-								&& ( curDist < closestDist || (curDist == closestDist && target instanceof Hero))){
-							target = ch;
-							closestDist = curDist;
-						}
-					}
-					if (closestDist > range){
-						target = null;
-					}
-				}
+				Char target = findClosestCharacter();
 
 				if (target != null) {
 					if (target instanceof Mob){
@@ -97,7 +84,8 @@ public class WornDartTrap extends Trap {
 								reset(pos, finalTarget.sprite, new Dart(), new Callback() {
 									@Override
 									public void call() {
-										int dmg = Random.NormalIntRange(4, 8) - finalTarget.drRoll();
+										int dmg = getDamage() - finalTarget.drRoll();
+										dmg = modifier.apply(dmg);
 										finalTarget.damage(dmg, WornDartTrap.this);
 										if (finalTarget == Dungeon.hero && !finalTarget.isAlive()){
 											Dungeon.fail( WornDartTrap.this  );
@@ -112,7 +100,9 @@ public class WornDartTrap extends Trap {
 								});
 						return false;
 					} else {
-						finalTarget.damage(Random.NormalIntRange(4, 8) - finalTarget.drRoll(), WornDartTrap.this);
+						int dmg = getDamage() - finalTarget.drRoll();
+						dmg = modifier.apply(dmg);
+						finalTarget.damage(dmg, WornDartTrap.this);
 						return true;
 					}
 				} else {

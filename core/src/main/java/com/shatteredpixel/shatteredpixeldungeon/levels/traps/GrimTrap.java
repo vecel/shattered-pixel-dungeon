@@ -39,7 +39,7 @@ import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 import com.watabou.noosa.audio.Sample;
 import com.watabou.utils.Callback;
 
-public class GrimTrap extends Trap {
+public class GrimTrap extends TargetTrap {
 
 	{
 		color = GREY;
@@ -62,30 +62,7 @@ public class GrimTrap extends Trap {
 			@Override
 			protected boolean act() {
 				Actor.remove(this);
-				Char target = Actor.findChar(pos);
-
-				//find the closest char that can be aimed at
-				//can't target beyond view distance, with a min of 6 (torch range)
-				//add 0.5 for better consistency with vision radius shape
-				float range = Math.max(6, Dungeon.level.viewDistance)+0.5f;
-				if (target == null){
-					float closestDist = Float.MAX_VALUE;
-					for (Char ch : Actor.chars()){
-						if (!ch.isAlive()) continue;
-						float curDist = Dungeon.level.trueDistance(pos, ch.pos);
-						//invis targets are considered to be at max range
-						if (ch.invisible > 0) curDist = Math.max(curDist, range);
-						Ballistica bolt = new Ballistica(pos, ch.pos, Ballistica.PROJECTILE);
-						if (bolt.collisionPos == ch.pos
-								&& ( curDist < closestDist || (curDist == closestDist && target instanceof Hero))){
-							target = ch;
-							closestDist = curDist;
-						}
-					}
-					if (closestDist > range){
-						target = null;
-					}
-				}
+				Char target = findClosestCharacter();
 
 				if (target != null) {
 					if (target instanceof Mob){

@@ -13,6 +13,7 @@ import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfEnergy;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.WornDartTrap;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
+import com.shatteredpixel.shatteredpixeldungeon.modifiers.DamageModifier;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.CellSelector;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
@@ -111,7 +112,8 @@ public class Detonator extends Artifact {
 
             spendCharges(ACTIVATE_CHARGE);
 
-            trap.trigger();
+            DamageModifier modifier = getTrapDamageModifier(hero);
+            trap.trigger(modifier);
 
             hero.dispelInvisibility();
             hero.onArtifactUsed();
@@ -231,6 +233,13 @@ public class Detonator extends Artifact {
     private void handleTrapActivation(Hero hero) {
         if (!hero.hasTalent(Talent.I_CAN_FIGHT_TOO)) return;
         hero.applyBuff(Talent.ICanFightTooTracker.class);
+    }
+
+    private DamageModifier getTrapDamageModifier(Hero hero) {
+        int points = hero.pointsInTalent(Talent.TRAP_EXPERT);
+        if (points == 0) return new DamageModifier();
+
+        return new DamageModifier(points + 1);
     }
 
     protected void callExecuteSuper(Hero hero, String action) {
