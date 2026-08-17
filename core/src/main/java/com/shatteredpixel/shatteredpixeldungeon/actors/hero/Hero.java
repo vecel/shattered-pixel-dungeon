@@ -26,7 +26,6 @@ import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Bones;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
-import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 import com.shatteredpixel.shatteredpixeldungeon.Statistics;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
@@ -80,7 +79,6 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Monk;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Snake;
 import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
-import com.shatteredpixel.shatteredpixeldungeon.effects.CheckedCell;
 import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
 import com.shatteredpixel.shatteredpixeldungeon.effects.SpellSprite;
@@ -130,7 +128,6 @@ import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfHaste;
 import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfMight;
 import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfTenacity;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.Scroll;
-import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfMagicMapping;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic.ScrollOfChallenge;
 import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.ThirteenLeafClover;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand;
@@ -156,9 +153,15 @@ import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
 import com.shatteredpixel.shatteredpixeldungeon.levels.features.Chasm;
 import com.shatteredpixel.shatteredpixeldungeon.levels.features.LevelTransition;
 import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special.WeakFloorRoom;
-import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
-import com.shatteredpixel.shatteredpixeldungeon.mechanics.ShadowCaster;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.CircularShape;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Shape;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.SquareShape;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.searching.FailedUnintentionalSearchStrategy;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.searching.ForesightSearchStrategy;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.searching.IntentionalSearchStrategy;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.searching.SearchStrategy;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.searching.UnintentionalSearchStrategy;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.AlchemyScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
@@ -170,6 +173,7 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
 import com.shatteredpixel.shatteredpixeldungeon.ui.QuickSlotButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.StatusPane;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.utils.ShapeUtils;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndHero;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndResurrect;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndTradeItem;
@@ -181,7 +185,6 @@ import com.watabou.utils.Bundle;
 import com.watabou.utils.Callback;
 import com.watabou.utils.GameMath;
 import com.watabou.utils.PathFinder;
-import com.watabou.utils.Point;
 import com.watabou.utils.Random;
 
 import java.util.ArrayList;
@@ -203,8 +206,8 @@ public class Hero extends Char {
 	public static final int STARTING_STR = 10;
 	
 	private static final float TIME_TO_REST		    = 1f;
-	private static final float TIME_TO_SEARCH	    = 2f;
-	private static final float HUNGER_FOR_SEARCH	= 6f;
+	public static final float TIME_TO_SEARCH	    = 2f;
+	public static final float HUNGER_FOR_SEARCH	= 6f;
 	
 	public HeroClass heroClass = HeroClass.ROGUE;
 	public HeroSubClass subClass = HeroSubClass.NONE;
@@ -245,13 +248,13 @@ public class Hero extends Char {
 
 	public Hero() {
 		super();
-
 		HP = HT = 20;
 		STR = STARTING_STR;
-		
+
 		belongings = new Belongings( this );
-		
+
 		visibleEnemies = new ArrayList<>();
+
 	}
 	
 	public void updateHT( boolean boostHP ){
@@ -2461,155 +2464,73 @@ public class Hero extends Char {
 		}
 	}
 
-	public boolean search( boolean intentional ) {
+	public boolean search(boolean intentional) {
 		
 		if (!isAlive()) return false;
-		
-		boolean smthFound = false;
 
-		boolean circular = pointsInTalent(Talent.WIDE_SEARCH) == 1;
-		int distance = heroClass == HeroClass.ROGUE ? 2 : 1;
-		if (hasTalent(Talent.WIDE_SEARCH)) distance++;
+
 		
-		boolean foresight = buff(Foresight.class) != null;
+		boolean foresight = hasBuff(Foresight.class);
 		boolean foresightScan = foresight && !Dungeon.level.mapped[pos];
 
 		if (foresightScan){
 			Dungeon.level.mapped[pos] = true;
 		}
 
-		if (foresight) {
-			distance = Foresight.DISTANCE;
-			circular = true;
-		}
-
-		Point c = Dungeon.level.cellToPoint(pos);
-
 		TalismanOfForesight.Foresight talisman = buff( TalismanOfForesight.Foresight.class );
 		boolean cursed = talisman != null && talisman.isCursed();
 
-		int[] rounding = ShadowCaster.rounding[distance];
-
-		int left, right;
-		int curr;
-		for (int y = Math.max(0, c.y - distance); y <= Math.min(Dungeon.level.height()-1, c.y + distance); y++) {
-			if (!circular){
-				left = c.x - distance;
-			} else if (rounding[Math.abs(c.y - y)] < Math.abs(c.y - y)) {
-				left = c.x - rounding[Math.abs(c.y - y)];
-			} else {
-				left = distance;
-				while (rounding[left] < rounding[Math.abs(c.y - y)]){
-					left--;
-				}
-				left = c.x - left;
-			}
-			right = Math.min(Dungeon.level.width()-1, c.x + c.x - left);
-			left = Math.max(0, left);
-			for (curr = left + y * Dungeon.level.width(); curr <= right + y * Dungeon.level.width(); curr++){
-
-				if ((foresight || fieldOfView[curr]) && curr != pos) {
-
-					if ((foresight && (!Dungeon.level.mapped[curr] || foresightScan))){
-						GameScene.effectOverFog(new CheckedCell(curr, foresightScan ? pos : curr));
-					} else if (intentional) {
-						GameScene.effectOverFog(new CheckedCell(curr, pos));
-					}
-
-					if (foresight){
-						Dungeon.level.mapped[curr] = true;
-					}
-					
-					if (Dungeon.level.secret[curr]){
-						
-						Trap trap = Dungeon.level.traps.get( curr );
-						float chance;
-
-						//searches aided by foresight always succeed, even if trap isn't searchable
-						if (foresight){
-							chance = 1f;
-
-						//otherwise if the trap isn't searchable, searching always fails
-						} else if (trap != null && !trap.canBeSearched){
-							chance = 0f;
-
-						//intentional searches always succeed against regular traps and doors
-						} else if (intentional){
-							chance = 1f;
-						
-						//unintentional searches always fail with a cursed talisman
-						} else if (cursed) {
-							chance = 0f;
-							
-						//unintentional trap detection scales from 40% at floor 0 to 30% at floor 25
-						} else if (Dungeon.level.map[curr] == Terrain.SECRET_TRAP) {
-							chance = 0.4f - (Dungeon.depth / 250f);
-							
-						//unintentional door detection scales from 20% at floor 0 to 0% at floor 20
-						} else {
-							chance = 0.2f - (Dungeon.depth / 100f);
-						}
-
-						//don't want to let the player search though hidden doors in tutorial
-						if (SPDSettings.intro()){
-							chance = 0;
-						}
-						
-						if (Random.Float() < chance) {
-						
-							int oldValue = Dungeon.level.map[curr];
-							
-							GameScene.discoverTile( curr, oldValue );
-							
-							Dungeon.level.discover( curr );
-							
-							ScrollOfMagicMapping.discover( curr );
-							
-							if (fieldOfView[curr]) smthFound = true;
-	
-							if (talisman != null){
-								if (oldValue == Terrain.SECRET_TRAP){
-									talisman.charge(2);
-								} else if (oldValue == Terrain.SECRET_DOOR){
-									talisman.charge(10);
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-		
-		if (intentional) {
-			sprite.showStatus( CharSprite.DEFAULT, Messages.get(this, "search") );
-			sprite.operate( pos );
-			if (!Dungeon.level.locked) {
-				if (cursed) {
-					GLog.n(Messages.get(this, "search_distracted"));
-					Buff.affect(this, Hunger.class).affectHunger(TIME_TO_SEARCH - (2 * HUNGER_FOR_SEARCH));
-				} else {
-					Buff.affect(this, Hunger.class).affectHunger(TIME_TO_SEARCH - HUNGER_FOR_SEARCH);
-				}
-			}
-			spendAndNext(TIME_TO_SEARCH);
-			
-		}
-		
-		if (smthFound) {
-			GLog.w( Messages.get(this, "noticed_smth") );
-			Sample.INSTANCE.play( Assets.Sounds.SECRET );
-			interrupt();
+		SearchStrategy strategy;
+		if (foresight) {
+			strategy = new ForesightSearchStrategy(new CircularShape(Foresight.DISTANCE));
+		} else if (intentional) {
+			Shape shape = intentionalSearchShape();
+			strategy = new IntentionalSearchStrategy(shape);
+		} else if (cursed) {
+			strategy = new FailedUnintentionalSearchStrategy();
+		} else {
+			Shape trapShape = unintentionalTrapSearchShape();
+			Shape doorShape = unintentionalDoorSearchShape();
+			strategy = new UnintentionalSearchStrategy(trapShape, doorShape);
 		}
 
-		if (foresight){
-			GameScene.updateFog(pos, Foresight.DISTANCE+1);
-		}
+		strategy.execute(this);
 
-		if (talisman != null){
-			talisman.checkAwareness();
+		if (talisman != null) talisman.checkAwareness();
+
+		return strategy.didFoundAnything();
+	}
+
+	private Shape intentionalSearchShape() {
+		boolean circular = pointsInTalent(Talent.WIDE_SEARCH) == 1;
+		int distance = heroClass == HeroClass.ROGUE ? 2 : 1;
+		if (hasTalent(Talent.WIDE_SEARCH)) distance++;
+		return circular
+			? new CircularShape(distance)
+			: new SquareShape(distance);
+	}
+
+	private Shape unintentionalDoorSearchShape() {
+		return intentionalSearchShape();
+	}
+
+	private Shape unintentionalTrapSearchShape() {
+		Shape shape = intentionalSearchShape();
+		if (pointsInTalent(Talent.TRAP_SENSE) == 2) {
+			shape = ShapeUtils.max(shape, new CircularShape(2));
 		}
-		
-		return smthFound;
+		return shape;
+	}
+
+	private void chargeTalismanOnFound(int secret) {
+		if (!hasBuff(TalismanOfForesight.Foresight.class)) return;
+		TalismanOfForesight.Foresight talisman = getBuff(TalismanOfForesight.Foresight.class);
+		if (secret == Terrain.SECRET_TRAP) {
+			talisman.charge(2);
+		}
+		if (secret == Terrain.SECRET_DOOR) {
+			talisman.charge(10);
+		}
 	}
 	
 	public void resurrect() {
@@ -2662,5 +2583,11 @@ public class Hero extends Char {
 
 	public boolean withinFieldOfView(int cell) {
 		return Dungeon.level.heroFOV[cell];
+	}
+
+	public void chargeTalismanIfPresent(int value) {
+		if (!hasBuff(TalismanOfForesight.Foresight.class)) return;
+		TalismanOfForesight.Foresight talisman = getBuff(TalismanOfForesight.Foresight.class);
+		talisman.charge(value);
 	}
 }
