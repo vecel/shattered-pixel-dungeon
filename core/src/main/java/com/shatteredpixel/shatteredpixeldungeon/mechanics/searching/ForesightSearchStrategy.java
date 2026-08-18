@@ -40,9 +40,6 @@ public class ForesightSearchStrategy extends SearchStrategy {
     @Override
     public void executePostSearchAction(Hero hero) {
         scene.updateFog(hero.pos, Foresight.DISTANCE+1);
-        if (hero.hasBuff(TalismanOfForesight.Foresight.class)) {
-            hero.getBuff(TalismanOfForesight.Foresight.class).checkAwareness();
-        }
     }
 
     private void searchOnCell(Hero hero, int cell) {

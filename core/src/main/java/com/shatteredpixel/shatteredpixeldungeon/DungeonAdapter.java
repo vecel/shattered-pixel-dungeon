@@ -9,6 +9,11 @@ import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 public class DungeonAdapter implements DungeonInterface {
 
     @Override
+    public int getDepth() {
+        return Dungeon.depth;
+    }
+
+    @Override
     public Trap getTrap(int cell) {
         return Dungeon.level.traps.get(cell);
     }

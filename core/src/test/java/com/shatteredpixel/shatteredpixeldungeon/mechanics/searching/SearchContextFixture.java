@@ -24,6 +24,7 @@ public class SearchContextFixture {
 
         doNothing().when(mockScene).effectOverFog(any(Visual.class));
         doNothing().when(mockScene).discover(any(Integer.class), any(Integer.class));
+        doNothing().when(mockScene).updateFog(any(Integer.class), any(Integer.class));
         doNothing().when(mockDungeon).discoverCell(any(Integer.class));
     }
 }

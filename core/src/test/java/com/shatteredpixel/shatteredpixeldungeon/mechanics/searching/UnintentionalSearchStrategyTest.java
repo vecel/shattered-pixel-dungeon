@@ -6,31 +6,27 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockConstruction;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
-import com.shatteredpixel.shatteredpixeldungeon.DungeonInterface;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
-import com.shatteredpixel.shatteredpixeldungeon.audio.Audio;
-import com.shatteredpixel.shatteredpixeldungeon.effects.CheckedCell;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.fakes.app.GdxApplicationExtension;
 import com.shatteredpixel.shatteredpixeldungeon.fakes.hero.MockHero;
-import com.shatteredpixel.shatteredpixeldungeon.fakes.logger.GameLoggerFake;
 import com.shatteredpixel.shatteredpixeldungeon.fakes.logger.LogEntry;
 import com.shatteredpixel.shatteredpixeldungeon.fakes.logger.LogLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.Shape;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
-import com.shatteredpixel.shatteredpixeldungeon.scenes.GameSceneInterface;
+import com.watabou.utils.Random;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.MockedConstruction;
+import org.mockito.MockedStatic;
 
 import java.util.List;
 
@@ -38,6 +34,7 @@ import java.util.List;
 class UnintentionalSearchStrategyTest {
     private UnintentionalSearchStrategy strategy;
     private SearchContextFixture context;
+    private SearchStrategyTestVerifier verifier;
     private Shape mockTrapShape;
     private Shape mockDoorShape;
     private Hero mockHero;
@@ -46,6 +43,7 @@ class UnintentionalSearchStrategyTest {
     @BeforeEach
     void setUp() {
         context = new SearchContextFixture();
+        verifier = new SearchStrategyTestVerifier(context.mockScene, context.mockDungeon);
 
         mockHero = MockHero.create();
         mockTrapShape = mock(Shape.class);
@@ -53,6 +51,8 @@ class UnintentionalSearchStrategyTest {
         mockTrap = mock(Trap.class);
 
         strategy = new UnintentionalSearchStrategy(context.mockDungeon, context.fakeLogger, context.mockScene, context.mockAudio, mockTrapShape, mockDoorShape);
+
+        mockTrap.canBeSearched = true;
 
         when(mockTrapShape.getCells(any(Integer.class))).thenReturn(List.of(1));
         when(mockDoorShape.getCells(any(Integer.class))).thenReturn(List.of(2));
@@ -62,6 +62,7 @@ class UnintentionalSearchStrategyTest {
 
     @Test
     void does_not_search_on_hero_position() {
+        when(mockDoorShape.getCells(any(Integer.class))).thenReturn(List.of());
         mockHero.pos = 1;
 
         strategy.execute(mockHero);
@@ -71,6 +72,7 @@ class UnintentionalSearchStrategyTest {
 
     @Test
     void does_not_search_when_cell_is_out_of_field_of_view() {
+        when(mockDoorShape.getCells(any(Integer.class))).thenReturn(List.of());
         when(mockHero.withinFieldOfView(1)).thenReturn(false);
 
         strategy.execute(mockHero);
@@ -89,22 +91,68 @@ class UnintentionalSearchStrategyTest {
 
     @Test
     void discovers_a_trap_when_roll_is_good() {
-        fail("Not implemented");
+        when(mockDoorShape.getCells(any(Integer.class))).thenReturn(List.of());
+        when(context.mockDungeon.getCell(any(Integer.class))).thenReturn(Terrain.SECRET_TRAP);
+        when(context.mockDungeon.getDepth()).thenReturn(0);
+
+        try (MockedStatic<Random> random = mockStatic(Random.class)) {
+            random.when(Random::Float).thenReturn(0.1f);
+            strategy.execute(mockHero);
+        }
+
+        verifier.verifyTrapDiscovered();
+        verifyOnce(mockHero).chargeTalismanIfPresent(2);
+        assertEquals(1, strategy.trapsFound);
     }
 
     @Test
-    void discovers_a_trap_when_roll_is_bad() {
-        fail("Not implemented");
+    void does_not_discover_a_trap_when_roll_is_bad() {
+        when(mockDoorShape.getCells(any(Integer.class))).thenReturn(List.of());
+        when(context.mockDungeon.getCell(any(Integer.class))).thenReturn(Terrain.SECRET_TRAP);
+        when(context.mockDungeon.getDepth()).thenReturn(0);
+
+        try (MockedStatic<Random> random = mockStatic(Random.class)) {
+            random.when(Random::Float).thenReturn(0.9f);
+            strategy.execute(mockHero);
+        }
+
+        verifyNever(mockHero).chargeTalismanIfPresent(2);
+        assertEquals(0, strategy.trapsFound);
     }
 
     @Test
     void has_higher_chance_to_detect_a_trap_with_trap_sense_talent() {
-        fail("Not implemented");
+        when(mockDoorShape.getCells(any(Integer.class))).thenReturn(List.of());
+        when(context.mockDungeon.getCell(any(Integer.class))).thenReturn(Terrain.SECRET_TRAP);
+        when(context.mockDungeon.getDepth()).thenReturn(0);
+        when(mockHero.hasTalent(Talent.TRAP_SENSE)).thenReturn(true);
+
+        try (MockedStatic<Random> random = mockStatic(Random.class)) {
+            random.when(Random::Float).thenReturn(0.7f);
+            strategy.execute(mockHero);
+        }
+
+        verifier.verifyTrapDiscovered();
+        verifyOnce(mockHero).chargeTalismanIfPresent(2);
+        assertEquals(1, strategy.trapsFound);
     }
 
     @Test
     void does_check_separate_shapes_for_trap_and_door() {
-        fail("Not implemented");
+        when(mockTrapShape.getCells(any(Integer.class))).thenReturn(List.of(1, 2));
+        when(mockDoorShape.getCells(any(Integer.class))).thenReturn(List.of(3, 4));
+        when(context.mockDungeon.getCell(1)).thenReturn(Terrain.SECRET_TRAP);
+        when(context.mockDungeon.getCell(2)).thenReturn(Terrain.SECRET_DOOR);
+        when(context.mockDungeon.getCell(3)).thenReturn(Terrain.SECRET_TRAP);
+        when(context.mockDungeon.getCell(4)).thenReturn(Terrain.SECRET_DOOR);
+
+        try (MockedStatic<Random> random = mockStatic(Random.class)) {
+            random.when(Random::Float).thenReturn(0f);
+            strategy.execute(mockHero);
+        }
+
+        assertEquals(1, strategy.trapsFound);
+        assertEquals(1, strategy.doorFound);
     }
 
     @Test

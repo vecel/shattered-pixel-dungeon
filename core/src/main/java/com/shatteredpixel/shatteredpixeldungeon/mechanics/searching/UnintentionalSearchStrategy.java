@@ -63,7 +63,7 @@ public class UnintentionalSearchStrategy extends SearchStrategy {
         if (dungeon.getCell(cell) == Terrain.SECRET_TRAP) {
             Trap trap = dungeon.getTrap(cell);
             if (trap == null || !trap.canBeSearched) return;
-            float chance = 0.4f - (Dungeon.depth / 250f);
+            float chance = 0.4f - (dungeon.getDepth() / 250f);
             if (hero.hasTalent(Talent.TRAP_SENSE)) chance *= 2;
 
             if (Random.Float() < chance) {
@@ -76,7 +76,7 @@ public class UnintentionalSearchStrategy extends SearchStrategy {
 
     private void searchDoorOnCell(Hero hero, int cell) {
         if (dungeon.getCell(cell) == Terrain.SECRET_DOOR) {
-            float chance = 0.2f - (Dungeon.depth / 100f);
+            float chance = 0.2f - (dungeon.getDepth() / 100f);
             if (Random.Float() < chance) {
                 discover(cell);
                 hero.chargeTalismanIfPresent(10);

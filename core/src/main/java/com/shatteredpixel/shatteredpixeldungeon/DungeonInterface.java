@@ -4,6 +4,7 @@ import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
 
 public interface DungeonInterface {
+    int getDepth();
 
     Trap getTrap(int cell);
 
