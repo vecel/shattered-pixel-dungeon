@@ -48,6 +48,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Daze;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Doom;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Dread;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FireImbue;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FlavourBuff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Frost;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.FrostImbue;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Fury;
@@ -1175,8 +1176,16 @@ public abstract class Char extends Actor {
 		return buff(buffClass) != null;
 	}
 
+	public synchronized <T extends Buff> T affectBuff(Class<T> buffClass) {
+		return Buff.affect(this, buffClass);
+	}
+
 	public synchronized <T extends Buff> void applyBuff(Class<T> buffClass) {
 		Buff.affect(this, buffClass);
+	}
+
+	public synchronized <T extends FlavourBuff> void applyBuffWithDuration(Class<T> buffClass, float duration) {
+		Buff.affect(this, buffClass, duration);
 	}
 
 	public synchronized boolean isCharmedBy( Char ch ) {

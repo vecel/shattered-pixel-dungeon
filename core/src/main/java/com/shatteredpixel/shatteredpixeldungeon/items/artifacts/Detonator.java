@@ -165,7 +165,15 @@ public class Detonator extends Artifact {
 
             handleLastChargeSpent(hero);
 
-            hero.spendAndNext(1f);
+            if (hero.hasTalent(Talent.QUICK_ACTIVATION) && !hero.hasBuff(Talent.QuickActivationCooldown.class)) {
+                int points = hero.pointsInTalent(Talent.QUICK_ACTIVATION);
+                int cooldown = points == 1 ? 50 : 30;
+                logger.positive("That was a quick detonation!");
+                hero.applyBuffWithDuration(Talent.QuickActivationCooldown.class, cooldown);
+                hero.spend(0f);
+            } else {
+                hero.spendAndNext(1f);
+            }
         }
 
         @Override

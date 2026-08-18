@@ -448,11 +448,18 @@ public enum Talent {
 		public void tintIcon(Image icon) { icon.hardlight(0f, 0f, 1f); }
 		public float iconFadePercent() { return Math.max(0, visualcooldown() / 20); }
 	}
-
 	public static class ICanFightTooTracker extends Buff {
 		{ type = Buff.buffType.POSITIVE; }
 		public int icon() { return BuffIndicator.INVERT_MARK; }
 	}
+	public static class QuickActivationCooldown extends FlavourBuff {
+		@Override
+		public int icon() {
+			return BuffIndicator.DETONATOR;
+		}
+		public float iconFadePercent() { return Math.max(0, visualcooldown() / 20); }
+	}
+
 
 	int icon;
 	int maxPoints;
@@ -1034,7 +1041,7 @@ public enum Talent {
 				Collections.addAll(tierTalents, SATIATED_SPELLS, HOLY_INTUITION, SEARING_LIGHT, SHIELD_OF_LIGHT);
 				break;
 			case SAPPER:
-				Collections.addAll(tierTalents, SAPPERS_MEAL, TRAP_EXPERT, I_CAN_FIGHT_TOO, LAST_KABOOM);
+				Collections.addAll(tierTalents, SAPPERS_MEAL, TRAP_EXPERT, I_CAN_FIGHT_TOO, LAST_KABOOM, QUICK_ACTIVATION);
 				break;
 		}
 		for (Talent talent : tierTalents){

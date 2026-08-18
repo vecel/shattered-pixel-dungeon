@@ -2,8 +2,10 @@ package com.shatteredpixel.shatteredpixeldungeon.mechanics.searching;
 
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.DungeonInterface;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Foresight;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.audio.Audio;
 import com.shatteredpixel.shatteredpixeldungeon.effects.CheckedCell;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.TalismanOfForesight;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
@@ -11,14 +13,21 @@ import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.Shape;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameSceneInterface;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GameLogger;
 import com.watabou.noosa.audio.Sample;
 
 public class ForesightSearchStrategy extends SearchStrategy {
     private final Shape searchShape;
 
-    public ForesightSearchStrategy(Shape searchShape) {
+    ForesightSearchStrategy(DungeonInterface dungeon, GameSceneInterface scene, Shape searchShape) {
+        super(dungeon, scene);
         this.searchShape = searchShape;
+    }
+
+    public static ForesightSearchStrategy create(SearchContext context, Shape searchShape) {
+        return new ForesightSearchStrategy(context.getDungeon(), context.getScene(), searchShape);
     }
 
     @Override
@@ -26,13 +35,11 @@ public class ForesightSearchStrategy extends SearchStrategy {
         for (int cell : searchShape.getCells(hero.pos)) {
             searchOnCell(hero, cell);
         }
-
-        executePostSearchAction(hero);
     }
 
     @Override
     public void executePostSearchAction(Hero hero) {
-        GameScene.updateFog(hero.pos, Foresight.DISTANCE+1);
+        scene.updateFog(hero.pos, Foresight.DISTANCE+1);
         if (hero.hasBuff(TalismanOfForesight.Foresight.class)) {
             hero.getBuff(TalismanOfForesight.Foresight.class).checkAwareness();
         }
@@ -41,15 +48,15 @@ public class ForesightSearchStrategy extends SearchStrategy {
     private void searchOnCell(Hero hero, int cell) {
         if (cell == hero.pos) return;
 
-        if (!Dungeon.level.mapped[cell]) {
-            GameScene.effectOverFog(new CheckedCell(cell, hero.pos));
+        if (!dungeon.isCellMapped(cell)) {
+            scene.effectOverFog(new CheckedCell(cell, hero.pos));
         }
 
-        Dungeon.level.mapped[cell] = true;
+        dungeon.setMapped(cell);
 
-        if (!Dungeon.level.secret[cell]) return;
+        if (!dungeon.hasSecretAt(cell)) return;
 
-        int terrain = Dungeon.level.map[cell];
+        int terrain = dungeon.getCell(cell);
 
         if (terrain == Terrain.SECRET_TRAP) {
             discover(cell);

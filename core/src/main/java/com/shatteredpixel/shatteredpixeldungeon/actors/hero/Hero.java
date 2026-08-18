@@ -25,6 +25,8 @@ import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Bones;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.DungeonAdapter;
+import com.shatteredpixel.shatteredpixeldungeon.DungeonInterface;
 import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 import com.shatteredpixel.shatteredpixeldungeon.Statistics;
@@ -78,6 +80,8 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mimic;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Monk;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Snake;
+import com.shatteredpixel.shatteredpixeldungeon.audio.Audio;
+import com.shatteredpixel.shatteredpixeldungeon.audio.AudioAdapter;
 import com.shatteredpixel.shatteredpixeldungeon.effects.CellEmitter;
 import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
@@ -160,11 +164,14 @@ import com.shatteredpixel.shatteredpixeldungeon.mechanics.SquareShape;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.searching.FailedUnintentionalSearchStrategy;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.searching.ForesightSearchStrategy;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.searching.IntentionalSearchStrategy;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.searching.SearchContext;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.searching.SearchStrategy;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.searching.UnintentionalSearchStrategy;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.AlchemyScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameSceneAdapter;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameSceneInterface;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.HeroSprite;
@@ -173,6 +180,8 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.BuffIndicator;
 import com.shatteredpixel.shatteredpixeldungeon.ui.QuickSlotButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.StatusPane;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GameLogger;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GameLoggerAdapter;
 import com.shatteredpixel.shatteredpixeldungeon.utils.ShapeUtils;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndHero;
 import com.shatteredpixel.shatteredpixeldungeon.windows.WndResurrect;
@@ -194,6 +203,11 @@ import java.util.List;
 import java.util.Map;
 
 public class Hero extends Char {
+
+	private final DungeonInterface dungeon;
+	private final GameLogger logger;
+	private final GameSceneInterface gameScene;
+	private final Audio audio;
 
 	{
 		actPriority = HERO_PRIO;
@@ -248,13 +262,31 @@ public class Hero extends Char {
 
 	public Hero() {
 		super();
+		constructor();
+
+		this.dungeon = new DungeonAdapter();
+		this.logger = new GameLoggerAdapter();
+		this.gameScene = new GameSceneAdapter();
+		this.audio = new AudioAdapter();
+	}
+
+	public Hero(DungeonInterface dungeon, GameLogger logger, GameSceneInterface gameScene, Audio audio) {
+		super();
+        constructor();
+
+        this.dungeon = dungeon;
+        this.logger = logger;
+        this.gameScene = gameScene;
+        this.audio = audio;
+	}
+
+	private void constructor() {
 		HP = HT = 20;
 		STR = STARTING_STR;
 
 		belongings = new Belongings( this );
 
 		visibleEnemies = new ArrayList<>();
-
 	}
 	
 	public void updateHT( boolean boostHP ){
@@ -2480,21 +2512,26 @@ public class Hero extends Char {
 		TalismanOfForesight.Foresight talisman = buff( TalismanOfForesight.Foresight.class );
 		boolean cursed = talisman != null && talisman.isCursed();
 
+		SearchContext context = new SearchContext(dungeon, gameScene, logger, audio);
+
 		SearchStrategy strategy;
 		if (foresight) {
-			strategy = new ForesightSearchStrategy(new CircularShape(Foresight.DISTANCE));
+			Shape shape = new CircularShape(Foresight.DISTANCE);
+			strategy = ForesightSearchStrategy.create(context, shape);
 		} else if (intentional) {
 			Shape shape = intentionalSearchShape();
-			strategy = new IntentionalSearchStrategy(shape);
+			strategy = IntentionalSearchStrategy.create(context, shape);
 		} else if (cursed) {
-			strategy = new FailedUnintentionalSearchStrategy();
+			strategy = FailedUnintentionalSearchStrategy.create(context);
 		} else {
 			Shape trapShape = unintentionalTrapSearchShape();
 			Shape doorShape = unintentionalDoorSearchShape();
-			strategy = new UnintentionalSearchStrategy(trapShape, doorShape);
+			strategy = UnintentionalSearchStrategy.create(context, trapShape, doorShape);
 		}
 
 		strategy.execute(this);
+		strategy.executePostSearchAction(this);
+
 
 		if (talisman != null) talisman.checkAwareness();
 
