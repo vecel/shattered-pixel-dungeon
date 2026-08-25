@@ -278,6 +278,14 @@ public class Artifact extends KindofMisc {
 		}
 	}
 
+	public void setExp(int exp) {
+		this.exp = exp;
+	}
+
+	public int getExp() {
+		return exp;
+	}
+
 	protected ArtifactBuff passiveBuff() {
 		return null;
 	}

@@ -9,6 +9,8 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfEnergy;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.TrapRegistry;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.TrapRegistryImpl;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.WornDartTrap;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.modifiers.DamageModifier;
@@ -18,14 +20,20 @@ import com.shatteredpixel.shatteredpixeldungeon.scenes.CellSelector;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GameLogger;
+import com.watabou.utils.Bundle;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 /// TODO:
 /// 1. Set quickslot action to trap activation
 public class Detonator extends Artifact {
 
     private final TrapModifierProvider trapModifierProvider;
+    private final TrapRegistry trapRegistry;
+
+    private final Set<Class<? extends Trap>> activated = new HashSet<>();
 
     {
         image = ItemSpriteSheet.ARTIFACT_DETONATOR;
@@ -38,6 +46,7 @@ public class Detonator extends Artifact {
         chargeCap = Math.min(level()+3, 10);
 
         unique = true;
+        defaultAction = AC_ACTIVATE;
     }
 
     public static final String AC_ACTIVATE = "ACTIVATE";
@@ -47,11 +56,13 @@ public class Detonator extends Artifact {
     public Detonator() {
         super();
         this.trapModifierProvider = new TrapModifierProviderAdapter();
+        this.trapRegistry = new TrapRegistryImpl();
     }
 
-    Detonator(GameLogger logger, DungeonInterface dungeon, TrapModifierProvider trapModifierProvider) {
+    Detonator(GameLogger logger, DungeonInterface dungeon, TrapModifierProvider trapModifierProvider, TrapRegistry trapRegistry) {
         super(logger, dungeon);
         this.trapModifierProvider = trapModifierProvider;
+        this.trapRegistry = trapRegistry;
     }
 
     @Override
@@ -111,25 +122,29 @@ public class Detonator extends Artifact {
                 return;
             }
 
-            int ACTIVATE_CHARGE = 1;
-            if (getCharge() < ACTIVATE_CHARGE) {
+            int activateCharge = 1;
+            if (getCharge() < activateCharge) {
                 logger.info(Messages.get(Detonator.class, "activate_no_charge"));
                 return;
             }
 
-            spendCharges(ACTIVATE_CHARGE);
+            spendCharges(activateCharge);
 
             DamageModifier modifier = trapModifierProvider.getModifierFor(hero);
             trap.trigger(modifier);
 
-            gainExp(10);
+            int exp = trapRegistry.getDanger(trap.getClass());
+            if (!activated.contains(trap.getClass())) {
+                activated.add(trap.getClass());
+                exp += 10;
+            }
+            gainExp(exp);
 
             hero.dispelInvisibility();
             hero.onArtifactUsed();
 
             float time = calculateActivationTime(hero);
 
-//            float time = 1;
             handleLastChargeSpent(hero);
             handleTrapActivation(hero);
             handleQuickActivation(hero);
@@ -152,15 +167,14 @@ public class Detonator extends Artifact {
 
             if (!dungeon.isCellEmpty(cell)) return;
 
-            int SET_TRAP_CHARGE = 2;
-            if (getCharge() < SET_TRAP_CHARGE) {
+            int setTrapCharge = 2;
+            if (getCharge() < setTrapCharge) {
                 logger.info(Messages.get(Detonator.class, "set_trap_no_charge"));
                 return;
             }
 
-            spendCharges(SET_TRAP_CHARGE);
+            spendCharges(setTrapCharge);
 
-            // TODO: change trap type
             dungeon.setTrap(new WornDartTrap(), cell);
 
             hero.sprite.operate(cell);
@@ -206,6 +220,23 @@ public class Detonator extends Artifact {
         if (cursed) return desc + "\n\n" + Messages.get(this, "desc_cursed");
 
         return desc;
+    }
+
+    @Override
+    public void storeInBundle(Bundle bundle) {
+        super.storeInBundle(bundle);
+        bundle.put("activated_traps", activated.toArray(new Class[0]));
+    }
+
+    @Override
+    public void restoreFromBundle(Bundle bundle) {
+        super.restoreFromBundle(bundle);
+        if (!bundle.contains("activated_traps")) {
+            throw new IllegalStateException("Cannot restore Detonator's activated traps, cause there is no field 'activated_traps' in bundle.");
+        }
+        for (Class<? extends Trap> trap : bundle.getClassArray("activated_traps")) {
+            activated.add(trap);
+        }
     }
 
     public class DetonatorRecharge extends ArtifactBuff {
@@ -280,18 +311,27 @@ public class Detonator extends Artifact {
         hero.applyCooldownBuff(new QuickActivationTalentCooldown(), cooldown - 1);
     }
 
-    // TODO: Implement exp schema
     private void gainExp(int value) {
+        if (level() == levelCap) return;
+
         exp += value;
-        if (exp >=  50 && level() < levelCap) {
+        int expToLevelUp = calculateLevelUpExp();
+        while (exp > expToLevelUp) {
+            exp -= expToLevelUp;
             upgrade();
-            exp -= 50;
+            expToLevelUp = calculateLevelUpExp();
         }
 
         updateQuickslot();
+    }
+
+    private int calculateLevelUpExp() {
+        return Math.min(10 * level() * level() + 50, 500);
     }
 
     protected void callExecuteSuper(Hero hero, String action) {
         super.execute(hero, action);
     }
 }
+
+

@@ -1033,7 +1033,7 @@ public enum Talent {
 				Collections.addAll(tierTalents, SATIATED_SPELLS, HOLY_INTUITION, SEARING_LIGHT, SHIELD_OF_LIGHT);
 				break;
 			case SAPPER:
-				Collections.addAll(tierTalents, SAPPERS_MEAL, TRAP_EXPERT, I_CAN_FIGHT_TOO, LAST_KABOOM, QUICK_ACTIVATION);
+				Collections.addAll(tierTalents, SAPPERS_MEAL, TRAP_EXPERT, I_CAN_FIGHT_TOO, LAST_KABOOM);
 				break;
 		}
 		for (Talent talent : tierTalents){

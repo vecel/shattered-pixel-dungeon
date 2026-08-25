@@ -1,5 +1,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.items.artifacts;
 
+import static com.shatteredpixel.shatteredpixeldungeon.utils.MockitoExtension.verifyNever;
+import static com.shatteredpixel.shatteredpixeldungeon.utils.MockitoExtension.verifyOnce;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -17,6 +19,8 @@ import com.shatteredpixel.shatteredpixeldungeon.DungeonInterface;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MagicImmune;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.TrapRegistry;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.WornDartTrap;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GdxApplicationExtension;
 import com.shatteredpixel.shatteredpixeldungeon.utils.MockHero;
 import com.shatteredpixel.shatteredpixeldungeon.utils.logger.GameLoggerFake;
@@ -45,6 +49,7 @@ class DetonatorTest {
     private Hero mockHero;
     private DungeonInterface mockDungeon;
     private TrapModifierProvider mockTrapModifierProvider;
+    private TrapRegistry mockTrapRegistry;
 
     private Trap mockTrap;
     private GameLoggerFake loggerFake;
@@ -57,20 +62,21 @@ class DetonatorTest {
         mockHero = MockHero.create();
         mockDungeon = mock(DungeonInterface.class);
         mockTrapModifierProvider = mock(TrapModifierProvider.class);
+        mockTrapRegistry = mock(TrapRegistry.class);
         mockTrap = mock(Trap.class);
         loggerFake = new GameLoggerFake();
 
-        trueDetonator = new Detonator(loggerFake, mockDungeon, mockTrapModifierProvider);
+        trueDetonator = new Detonator(loggerFake, mockDungeon, mockTrapModifierProvider, mockTrapRegistry);
         detonator = spy(trueDetonator);
 
         doReturn(true).when(detonator).isEquipped(mockHero);
         doNothing().when(detonator).callExecuteSuper(any(), any());
 
-
         when(mockDungeon.getTrap(any(Integer.class))).thenReturn(mockTrap);
         when(mockDungeon.isCellEmpty(any(Integer.class))).thenReturn(true);
         when(mockHero.withinFieldOfView(any(Integer.class))).thenReturn(true);
         when(mockTrapModifierProvider.getModifierFor(mockHero)).thenReturn(DamageModifier.NONE);
+        when(mockTrapRegistry.getDanger(any(Class.class))).thenReturn(10);
 
         doNothing().when(mockHero.sprite).operate(1);
     }
@@ -284,6 +290,36 @@ class DetonatorTest {
     @Test
     void has_recharging_passive_buff() {
         fail("Not implemented yet");
+    }
+
+    @Test
+    void gives_exp_when_activating_a_trap() {
+        int expAfterFirstActivation = 20;
+        int expAfterSecondActivation = 30;
+
+        CellSelector.Listener listener = captureListener(ACTIVATE);
+        listener.onSelect(1);
+
+        assertEquals(expAfterFirstActivation, trueDetonator.getExp());
+
+        listener.onSelect(1);
+
+        assertEquals(expAfterSecondActivation, trueDetonator.getExp());
+    }
+
+    @Test
+    void levels_up_when_activating_a_trap() {
+        int initialExp = 130;
+        int expToLevelUp = 140;
+        int expGained = 20;
+
+        trueDetonator.level(3);
+        trueDetonator.setExp(130);
+
+        CellSelector.Listener listener = captureListener(ACTIVATE);
+        listener.onSelect(1);
+
+        assertEquals(initialExp + expGained - expToLevelUp, trueDetonator.getExp());
     }
 
     private CellSelector.Listener captureListener(String action) {
