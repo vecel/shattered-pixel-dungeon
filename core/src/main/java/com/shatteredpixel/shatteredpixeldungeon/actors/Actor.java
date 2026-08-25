@@ -250,20 +250,7 @@ public abstract class Actor implements Bundlable {
 			
 			current = null;
 			if (!interrupted && !Game.switchingScene()) {
-				float earliest = Float.MAX_VALUE;
-
-				synchronized (Actor.class) {
-					for (Actor actor : all) {
-
-						//some actors will always go before others if time is equal.
-						if (actor.time < earliest ||
-								actor.time == earliest && (current == null || actor.actPriority > current.actPriority)) {
-							earliest = actor.time;
-							current = actor;
-						}
-
-					}
-				}
+				resolveCurrent();
 			}
 
 			if  (current != null) {
@@ -324,7 +311,29 @@ public abstract class Actor implements Bundlable {
 
 		} while (keepActorThreadAlive);
 	}
-	
+
+	public static void resolveCurrent() {
+		float earliest = Float.MAX_VALUE;
+
+		synchronized (Actor.class) {
+			for (Actor actor : all) {
+
+				//some actors will always go before others if time is equal.
+				if (actor.time < earliest ||
+						actor.time == earliest && (current == null || actor.actPriority > current.actPriority)) {
+					earliest = actor.time;
+					current = actor;
+				}
+
+			}
+		}
+	}
+
+	public static void processCurrent() {
+		if (current == null) return;
+		current.act();
+	}
+
 	public static void add( Actor actor ) {
 		add( actor, now );
 	}
@@ -393,4 +402,8 @@ public abstract class Actor implements Bundlable {
 	}
 
 	public static synchronized HashSet<Char> chars() { return new HashSet<>(chars); }
+
+	public float getTime() {
+		return time;
+	}
 }

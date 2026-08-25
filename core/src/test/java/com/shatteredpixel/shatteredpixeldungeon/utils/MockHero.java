@@ -1,11 +1,10 @@
-package com.shatteredpixel.shatteredpixeldungeon.fakes.hero;
+package com.shatteredpixel.shatteredpixeldungeon.utils;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Hunger;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Belongings;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;

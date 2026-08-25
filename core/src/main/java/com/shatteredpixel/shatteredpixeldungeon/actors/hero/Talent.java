@@ -452,14 +452,6 @@ public enum Talent {
 		{ type = Buff.buffType.POSITIVE; }
 		public int icon() { return BuffIndicator.INVERT_MARK; }
 	}
-	public static class QuickActivationCooldown extends FlavourBuff {
-		@Override
-		public int icon() {
-			return BuffIndicator.DETONATOR;
-		}
-		public float iconFadePercent() { return Math.max(0, visualcooldown() / 20); }
-	}
-
 
 	int icon;
 	int maxPoints;

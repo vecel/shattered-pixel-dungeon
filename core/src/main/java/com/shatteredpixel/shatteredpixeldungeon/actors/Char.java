@@ -1184,8 +1184,8 @@ public abstract class Char extends Actor {
 		Buff.affect(this, buffClass);
 	}
 
-	public synchronized <T extends FlavourBuff> void applyBuffWithDuration(Class<T> buffClass, float duration) {
-		Buff.affect(this, buffClass, duration);
+	public synchronized <T extends FlavourBuff> void applyCooldownBuff(FlavourBuff buff, float duration) {
+		Buff.affect(this, buff.getClass(), duration);
 	}
 
 	public synchronized boolean isCharmedBy( Char ch ) {

@@ -7,11 +7,9 @@ import static org.mockito.Mockito.when;
 
 import com.shatteredpixel.shatteredpixeldungeon.DungeonInterface;
 import com.shatteredpixel.shatteredpixeldungeon.audio.Audio;
-import com.shatteredpixel.shatteredpixeldungeon.fakes.logger.GameLoggerFake;
+import com.shatteredpixel.shatteredpixeldungeon.utils.logger.GameLoggerFake;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameSceneInterface;
 import com.watabou.noosa.Visual;
-
-import java.util.List;
 
 public class SearchContextFixture {
     public final DungeonInterface mockDungeon = mock(DungeonInterface.class);

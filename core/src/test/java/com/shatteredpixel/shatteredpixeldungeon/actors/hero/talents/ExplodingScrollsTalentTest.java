@@ -12,8 +12,7 @@ import static org.mockito.Mockito.when;
 
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
-import com.shatteredpixel.shatteredpixeldungeon.fakes.hero.MockHero;
-import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Detonator;
+import com.shatteredpixel.shatteredpixeldungeon.utils.MockHero;
 import com.shatteredpixel.shatteredpixeldungeon.items.bombs.Bomb;
 import com.shatteredpixel.shatteredpixeldungeon.items.bombs.explosion.ExplosionStrategy;
 import com.shatteredpixel.shatteredpixeldungeon.items.bombs.explosion.SafeExplosionStrategy;

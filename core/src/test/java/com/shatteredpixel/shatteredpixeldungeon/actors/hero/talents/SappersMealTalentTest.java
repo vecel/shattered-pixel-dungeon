@@ -1,6 +1,5 @@
 package com.shatteredpixel.shatteredpixeldungeon.actors.hero.talents;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -10,7 +9,7 @@ import static org.mockito.Mockito.when;
 
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
-import com.shatteredpixel.shatteredpixeldungeon.fakes.hero.MockHero;
+import com.shatteredpixel.shatteredpixeldungeon.utils.MockHero;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Detonator;
 
 import org.junit.jupiter.api.BeforeEach;

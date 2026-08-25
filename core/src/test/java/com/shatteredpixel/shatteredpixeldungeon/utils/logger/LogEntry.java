@@ -1,4 +1,4 @@
-package com.shatteredpixel.shatteredpixeldungeon.fakes.logger;
+package com.shatteredpixel.shatteredpixeldungeon.utils.logger;
 
 
 import java.util.Objects;

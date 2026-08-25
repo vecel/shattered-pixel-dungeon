@@ -1,4 +1,4 @@
-package com.shatteredpixel.shatteredpixeldungeon.fakes.app;
+package com.shatteredpixel.shatteredpixeldungeon.utils;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;

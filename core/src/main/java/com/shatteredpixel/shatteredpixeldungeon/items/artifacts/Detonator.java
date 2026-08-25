@@ -3,6 +3,7 @@ package com.shatteredpixel.shatteredpixeldungeon.items.artifacts;
 import com.shatteredpixel.shatteredpixeldungeon.DungeonInterface;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MagicImmune;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Regeneration;
+import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.cooldowns.QuickActivationTalentCooldown;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
@@ -126,10 +127,14 @@ public class Detonator extends Artifact {
             hero.dispelInvisibility();
             hero.onArtifactUsed();
 
+            float time = calculateActivationTime(hero);
+
+//            float time = 1;
             handleLastChargeSpent(hero);
             handleTrapActivation(hero);
+            handleQuickActivation(hero);
 
-            hero.spendAndNext(1f);
+            hero.spendAndNext(time);
         }
 
         @Override
@@ -165,15 +170,7 @@ public class Detonator extends Artifact {
 
             handleLastChargeSpent(hero);
 
-            if (hero.hasTalent(Talent.QUICK_ACTIVATION) && !hero.hasBuff(Talent.QuickActivationCooldown.class)) {
-                int points = hero.pointsInTalent(Talent.QUICK_ACTIVATION);
-                int cooldown = points == 1 ? 50 : 30;
-                logger.positive("That was a quick detonation!");
-                hero.applyBuffWithDuration(Talent.QuickActivationCooldown.class, cooldown);
-                hero.spend(0f);
-            } else {
-                hero.spendAndNext(1f);
-            }
+            hero.spendAndNext(1f);
         }
 
         @Override
@@ -248,6 +245,11 @@ public class Detonator extends Artifact {
 
     }
 
+    private float calculateActivationTime(Hero hero) {
+        if (hero.hasTalent(Talent.QUICK_ACTIVATION) && !hero.hasBuff(QuickActivationTalentCooldown.class)) return 0;
+        return 1;
+    }
+
     private void handleLastChargeSpent(Hero hero) {
         if (hasCharges()) return;
         int lastKaboomPoints = hero.pointsInTalent(Talent.LAST_KABOOM);
@@ -266,6 +268,19 @@ public class Detonator extends Artifact {
         hero.applyBuff(Talent.ICanFightTooTracker.class);
     }
 
+    private void handleQuickActivation(Hero hero) {
+        if (!hero.hasTalent(Talent.QUICK_ACTIVATION)) return;
+        if (hero.hasBuff(QuickActivationTalentCooldown.class)) return;
+
+        int points = hero.pointsInTalent(Talent.QUICK_ACTIVATION);
+        int cooldown = points == 1 ? 50 : 30;
+
+        logger.positive("That was a quick!");
+
+        hero.applyCooldownBuff(new QuickActivationTalentCooldown(), cooldown - 1);
+    }
+
+    // TODO: Implement exp schema
     private void gainExp(int value) {
         exp += value;
         if (exp >=  50 && level() < levelCap) {

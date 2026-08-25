@@ -1,8 +1,5 @@
 package com.shatteredpixel.shatteredpixeldungeon.mechanics.searching;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import static com.shatteredpixel.shatteredpixeldungeon.utils.MockitoExtension.verifyNever;
 import static com.shatteredpixel.shatteredpixeldungeon.utils.MockitoExtension.verifyOnce;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -11,25 +8,16 @@ import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Foresight;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
-import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
-import com.shatteredpixel.shatteredpixeldungeon.fakes.app.GdxApplicationExtension;
-import com.shatteredpixel.shatteredpixeldungeon.fakes.hero.MockHero;
-import com.shatteredpixel.shatteredpixeldungeon.fakes.logger.LogEntry;
-import com.shatteredpixel.shatteredpixeldungeon.fakes.logger.LogLevel;
-import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.TalismanOfForesight;
-import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GdxApplicationExtension;
+import com.shatteredpixel.shatteredpixeldungeon.utils.MockHero;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.Shape;
-import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
-import com.watabou.utils.Random;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.MockedStatic;
 
 import java.util.List;
 

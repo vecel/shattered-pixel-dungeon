@@ -4,7 +4,6 @@ import static com.shatteredpixel.shatteredpixeldungeon.utils.MockitoExtension.ve
 import static com.shatteredpixel.shatteredpixeldungeon.utils.MockitoExtension.verifyOnce;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.never;
@@ -14,16 +13,15 @@ import static org.mockito.Mockito.when;
 
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.DungeonInterface;
-import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Hunger;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.audio.Audio;
 import com.shatteredpixel.shatteredpixeldungeon.effects.CheckedCell;
-import com.shatteredpixel.shatteredpixeldungeon.fakes.app.GdxApplicationExtension;
-import com.shatteredpixel.shatteredpixeldungeon.fakes.hero.MockHero;
-import com.shatteredpixel.shatteredpixeldungeon.fakes.logger.GameLoggerFake;
-import com.shatteredpixel.shatteredpixeldungeon.fakes.logger.LogEntry;
-import com.shatteredpixel.shatteredpixeldungeon.fakes.logger.LogLevel;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GdxApplicationExtension;
+import com.shatteredpixel.shatteredpixeldungeon.utils.MockHero;
+import com.shatteredpixel.shatteredpixeldungeon.utils.logger.GameLoggerFake;
+import com.shatteredpixel.shatteredpixeldungeon.utils.logger.LogEntry;
+import com.shatteredpixel.shatteredpixeldungeon.utils.logger.LogLevel;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.TalismanOfForesight;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
@@ -31,7 +29,6 @@ import com.shatteredpixel.shatteredpixeldungeon.mechanics.Shape;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameSceneInterface;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
-import com.watabou.noosa.Visual;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
