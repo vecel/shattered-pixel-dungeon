@@ -120,4 +120,16 @@ class TrapSettingActionTest {
 
         verifyOnce(fixture.hero).spendAndNext(1f);
     }
+
+    @Test
+    void does_not_work_when_no_trap_is_stored() {
+        LogEntry entry = new LogEntry(LogLevel.INFO, Messages.get(Detonator.class, "set_trap_no_store"));
+        fixture.withoutStoredTrap();
+
+        action.execute(1);
+
+        assertTrue(fixture.logger.contains(entry));
+        verifyNever(fixture.detonator).spendCharges(anyInt());
+        verifyNever(fixture.dungeon).setTrap(any(Trap.class), anyInt());
+    }
 }

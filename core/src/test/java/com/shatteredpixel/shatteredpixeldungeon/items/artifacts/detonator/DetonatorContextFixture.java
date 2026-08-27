@@ -101,4 +101,9 @@ public class DetonatorContextFixture {
     public void withInactiveTrap() {
         when(trap.isActive()).thenReturn(false);
     }
+
+    public void withoutStoredTrap() {
+        doReturn(null).when(detonator).getStoredTrap();
+        doReturn(false).when(detonator).hasStoredTrap();
+    }
 }

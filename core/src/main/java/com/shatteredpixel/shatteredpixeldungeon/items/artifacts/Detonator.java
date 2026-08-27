@@ -41,7 +41,7 @@ public class Detonator extends Artifact {
     private final TrapModifierProvider trapModifierProvider;
     private final TrapRegistry trapRegistry;
     private final Set<Class<? extends Trap>> knownTraps = new HashSet<>();
-    private final List<Class<? extends Trap>> storedTraps = new ArrayList<>(List.of(WornDartTrap.class));
+    private final List<Class<? extends Trap>> storedTraps = new ArrayList<>();
 
     {
         image = ItemSpriteSheet.ARTIFACT_DETONATOR;
@@ -141,11 +141,13 @@ public class Detonator extends Artifact {
         return new DetonatorRecharge();
     }
 
+    @Todo("Add stored trap name")
     @Override
     public String desc() {
         String desc = super.desc();
 
         if (cursed) return desc + "\n\n" + Messages.get(this, "desc_cursed");
+        if (!hasStoredTrap()) return desc + "\n\n" + Messages.get(this, "desc_no_store");
 
         return desc;
     }
@@ -211,6 +213,10 @@ public class Detonator extends Artifact {
 
     public Trap getStoredTrap() {
         return trapRegistry.create(storedTraps.get(0));
+    }
+
+    public boolean hasStoredTrap() {
+        return !storedTraps.isEmpty();
     }
 
     public void setKnown(Trap trap) {

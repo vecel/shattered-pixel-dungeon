@@ -23,6 +23,11 @@ public class TrapSettingAction extends DetonatorAction {
         if (!hero.withinFieldOfView(cell)) return;
         if (!dungeon.isCellEmpty(cell) && !dungeon.isCellGrass(cell)) return;
 
+        if (!detonator.hasStoredTrap()) {
+            logger.info(Messages.get(Detonator.class, "set_trap_no_store"));
+            return;
+        }
+
         if (!detonator.isCellWithinTrapSettingRange(cell, hero)) {
             logger.info(Messages.get(Detonator.class, "set_trap_out_of_range"));
             return;
@@ -36,10 +41,11 @@ public class TrapSettingAction extends DetonatorAction {
             return;
         }
 
-        detonator.spendCharges(setTrapCharge);
 
         Trap newTrap = detonator.getStoredTrap();
         dungeon.setTrap(newTrap, cell);
+
+        detonator.spendCharges(setTrapCharge);
 
         hero.sprite.operate(cell);
         hero.busy();
