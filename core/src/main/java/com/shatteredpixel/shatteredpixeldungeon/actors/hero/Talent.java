@@ -211,7 +211,7 @@ public enum Talent {
 	// Sapper T1
 	SAPPERS_MEAL(192), TRAP_EXPERT(193), I_CAN_FIGHT_TOO(194), LAST_KABOOM(195),
 	// Sapper T2
-	/* We reuse MYSTICAL_MEAL with different name */ EXPLODING_SCROLLS(197), QUICK_ACTIVATION(199), TRAP_SENSE(200);
+	/* We reuse MYSTICAL_MEAL with different name */ EXPLODING_SCROLLS(197), DETONATOR_RANGE(198), QUICK_ACTIVATION(199), TRAP_SENSE(200);
 
 	private static final Map<Talent, FoodTalentHandler> foodHandlers = new EnumMap<>(Map.of(
 			SAPPERS_MEAL, new SappersMealTalent()
@@ -957,7 +957,7 @@ public enum Talent {
 
 		if (hero.hasTalent(I_CAN_FIGHT_TOO) && hero.hasBuff(ICanFightTooTracker.class)) {
 			hero.getBuff(ICanFightTooTracker.class).detach();
-			dmg += hero.pointsInTalent(I_CAN_FIGHT_TOO);
+			dmg += 1 + hero.pointsInTalent(I_CAN_FIGHT_TOO);
 		}
 
 		return dmg;
@@ -1065,7 +1065,7 @@ public enum Talent {
 				Collections.addAll(tierTalents, ENLIGHTENING_MEAL, RECALL_INSCRIPTION, SUNRAY, DIVINE_SENSE, BLESS);
 				break;
 			case SAPPER:
-				Collections.addAll(tierTalents, MYSTICAL_MEAL, EXPLODING_SCROLLS, QUICK_ACTIVATION, TRAP_SENSE);
+				Collections.addAll(tierTalents, MYSTICAL_MEAL, EXPLODING_SCROLLS, DETONATOR_RANGE, QUICK_ACTIVATION, TRAP_SENSE);
 		}
 		for (Talent talent : tierTalents){
 			if (replacements.containsKey(talent)){

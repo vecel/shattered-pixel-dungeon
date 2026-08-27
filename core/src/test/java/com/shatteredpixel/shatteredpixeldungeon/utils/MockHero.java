@@ -1,6 +1,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.utils;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -29,8 +30,13 @@ public class MockHero {
         doNothing().when(sprite).operate(any(Integer.class));
         doNothing().when(sprite).showStatus(any(Integer.class), any(String.class));
 
+        doNothing().when(hero).dispelInvisibility();
+        doNothing().when(hero).onArtifactUsed();
+
         when(hero.getBuff(Hunger.class)).thenReturn(hunger);
         when(hero.affectBuff(Hunger.class)).thenReturn(hunger);
+
+        when(hero.withinFieldOfView(anyInt())).thenReturn(true);
     }
 
     public static Hero create() {

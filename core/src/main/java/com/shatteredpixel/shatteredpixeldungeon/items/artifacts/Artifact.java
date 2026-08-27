@@ -251,7 +251,7 @@ public class Artifact extends KindofMisc {
 		return charge;
 	}
 
-	protected void setCharge(int charge) {
+	public void setCharge(int charge) {
 		this.charge = charge;
 	}
 

@@ -1,5 +1,6 @@
 package com.shatteredpixel.shatteredpixeldungeon.items.artifacts;
 
+import com.karandys.todo.Todo;
 import com.shatteredpixel.shatteredpixeldungeon.DungeonInterface;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MagicImmune;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Regeneration;
@@ -7,13 +8,19 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.cooldowns.QuickActi
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.detonator.DetonatorAction;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.detonator.TrapSettingAction;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.detonator.TrapActivationAction;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.detonator.DetonatorContext;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.detonator.TrapStorageAction;
 import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfEnergy;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.TrapRegistry;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.TrapRegistryImpl;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.WornDartTrap;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.CircularShape;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Shape;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
-import com.shatteredpixel.shatteredpixeldungeon.modifiers.DamageModifier;
 import com.shatteredpixel.shatteredpixeldungeon.modifiers.TrapModifierProvider;
 import com.shatteredpixel.shatteredpixeldungeon.modifiers.TrapModifierProviderAdapter;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.CellSelector;
@@ -24,16 +31,17 @@ import com.watabou.utils.Bundle;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
-/// TODO:
-/// 1. Set quickslot action to trap activation
+@Todo("Allow setting a trap on furrowed grass.")
+@Todo("Implement different trap setting.")
 public class Detonator extends Artifact {
 
     private final TrapModifierProvider trapModifierProvider;
     private final TrapRegistry trapRegistry;
-
-    private final Set<Class<? extends Trap>> activated = new HashSet<>();
+    private final Set<Class<? extends Trap>> knownTraps = new HashSet<>();
+    private final List<Class<? extends Trap>> storedTraps = new ArrayList<>(List.of(WornDartTrap.class));
 
     {
         image = ItemSpriteSheet.ARTIFACT_DETONATOR;
@@ -51,7 +59,7 @@ public class Detonator extends Artifact {
 
     public static final String AC_ACTIVATE = "ACTIVATE";
     public static final String AC_SET_TRAP = "SET_TRAP";
-
+    public static final String AC_STORE_TRAP = "STORE_TRAP";
 
     public Detonator() {
         super();
@@ -67,8 +75,9 @@ public class Detonator extends Artifact {
 
     @Override
     public ArrayList<String> actions(Hero hero) {
-        ArrayList<String> actions = super.actions( hero );
-        if (isEquipped( hero ) && !cursed && hero.buff(MagicImmune.class) == null) {
+        ArrayList<String> actions = super.actions(hero);
+        if (isEquipped(hero) && !cursed && !hero.hasBuff(MagicImmune.class)) {
+            actions.add(AC_STORE_TRAP);
             actions.add(AC_SET_TRAP);
             actions.add(AC_ACTIVATE);
         }
@@ -79,7 +88,7 @@ public class Detonator extends Artifact {
     public void execute(Hero hero, String action) {
         callExecuteSuper(hero, action);
 
-        if (hero.buff(MagicImmune.class) != null) return;
+        if (hero.hasBuff(MagicImmune.class)) return;
 
         if (!isEquipped(hero)) {
             logger.info(Messages.get(Artifact.class, "need_to_equip"));
@@ -91,107 +100,26 @@ public class Detonator extends Artifact {
             return;
         }
 
+        DetonatorContext context = new DetonatorContext(hero, dungeon, logger, trapRegistry,
+                trapModifierProvider);
+
+        DetonatorAction strategy;
+
         if (action.equals(AC_ACTIVATE)) {
-            GameScene.selectCell(activationSelector.init(hero));
+            strategy = new TrapActivationAction(this, context);
+            applyAction(strategy);
         }
 
         if (action.equals(AC_SET_TRAP)) {
-            GameScene.selectCell(setTrapSelector.init(hero));
+            strategy = new TrapSettingAction(this, context);
+            applyAction(strategy);
+        }
+
+        if (action.equals(AC_STORE_TRAP)) {
+            strategy = new TrapStorageAction(this, context);
+            applyAction(strategy);
         }
     }
-
-    private abstract static class DetonatorSelector extends CellSelector.Listener {
-        protected Hero hero;
-        protected DetonatorSelector init(Hero hero) {
-            this.hero = hero;
-            return this;
-        }
-    }
-
-    private final DetonatorSelector activationSelector = new DetonatorSelector() {
-
-        @Override
-        public void onSelect(Integer cell) {
-            if (cell == null) return;
-
-            if (!hero.withinFieldOfView(cell)) return;
-
-            Trap trap = dungeon.getTrap(cell);
-            if (trap == null) {
-                logger.info(Messages.get(Detonator.class, "activate_no_trap"));
-                return;
-            }
-
-            int activateCharge = 1;
-            if (getCharge() < activateCharge) {
-                logger.info(Messages.get(Detonator.class, "activate_no_charge"));
-                return;
-            }
-
-            spendCharges(activateCharge);
-
-            DamageModifier modifier = trapModifierProvider.getModifierFor(hero);
-            trap.trigger(modifier);
-
-            int exp = trapRegistry.getDanger(trap.getClass());
-            if (!activated.contains(trap.getClass())) {
-                activated.add(trap.getClass());
-                exp += 10;
-            }
-            gainExp(exp);
-
-            hero.dispelInvisibility();
-            hero.onArtifactUsed();
-
-            float time = calculateActivationTime(hero);
-
-            handleLastChargeSpent(hero);
-            handleTrapActivation(hero);
-            handleQuickActivation(hero);
-
-            hero.spendAndNext(time);
-        }
-
-        @Override
-        public String prompt() {
-            return Messages.get(Detonator.class, "activate_prompt");
-        }
-    };
-
-    private final DetonatorSelector setTrapSelector = new DetonatorSelector() {
-        @Override
-        public void onSelect(Integer cell) {
-            if (cell == null) return;
-
-            if (!hero.withinFieldOfView(cell)) return;
-
-            if (!dungeon.isCellEmpty(cell)) return;
-
-            int setTrapCharge = 2;
-            if (getCharge() < setTrapCharge) {
-                logger.info(Messages.get(Detonator.class, "set_trap_no_charge"));
-                return;
-            }
-
-            spendCharges(setTrapCharge);
-
-            dungeon.setTrap(new WornDartTrap(), cell);
-
-            hero.sprite.operate(cell);
-            hero.busy();
-            hero.dispelInvisibility();
-            hero.onArtifactUsed();
-
-            handleLastChargeSpent(hero);
-
-            hero.spendAndNext(1f);
-        }
-
-        @Override
-        public String prompt() {
-            return Messages.get(Detonator.class, "set_trap_prompt");
-        }
-    };
 
     @Override
     public void charge(Hero target, float amount) {
@@ -225,7 +153,7 @@ public class Detonator extends Artifact {
     @Override
     public void storeInBundle(Bundle bundle) {
         super.storeInBundle(bundle);
-        bundle.put("activated_traps", activated.toArray(new Class[0]));
+        bundle.put("activated_traps", knownTraps.toArray(new Class[0]));
     }
 
     @Override
@@ -235,7 +163,7 @@ public class Detonator extends Artifact {
             throw new IllegalStateException("Cannot restore Detonator's activated traps, cause there is no field 'activated_traps' in bundle.");
         }
         for (Class<? extends Trap> trap : bundle.getClassArray("activated_traps")) {
-            activated.add(trap);
+            knownTraps.add(trap);
         }
     }
 
@@ -276,12 +204,45 @@ public class Detonator extends Artifact {
 
     }
 
-    private float calculateActivationTime(Hero hero) {
+    public void storeTrap(Trap trap) {
+        storedTraps.clear();
+        storedTraps.add(trap.getClass());
+    }
+
+    public Trap getStoredTrap() {
+        return trapRegistry.create(storedTraps.get(0));
+    }
+
+    public void setKnown(Trap trap) {
+        knownTraps.add(trap.getClass());
+    }
+
+    public boolean isKnown(Trap trap) {
+        return knownTraps.contains(trap.getClass());
+    }
+
+    @Todo("Add available cells highlight")
+    private void applyAction(DetonatorAction strategy) {
+        GameScene.selectCell(new CellSelector.Listener() {
+            @Override
+            public void onSelect(Integer cell) {
+                if (cell == null) return;
+                strategy.execute(cell);
+            }
+
+            @Override
+            public String prompt() {
+                return strategy.prompt();
+            }
+        });
+    }
+
+    public float calculateActivationTime(Hero hero) {
         if (hero.hasTalent(Talent.QUICK_ACTIVATION) && !hero.hasBuff(QuickActivationTalentCooldown.class)) return 0;
         return 1;
     }
 
-    private void handleLastChargeSpent(Hero hero) {
+    public void handleLastChargeSpent(Hero hero) {
         if (hasCharges()) return;
         int lastKaboomPoints = hero.pointsInTalent(Talent.LAST_KABOOM);
         if (lastKaboomPoints == 0) return;
@@ -294,12 +255,12 @@ public class Detonator extends Artifact {
         }
     }
 
-    private void handleTrapActivation(Hero hero) {
+    public void handleTrapActivation(Hero hero) {
         if (!hero.hasTalent(Talent.I_CAN_FIGHT_TOO)) return;
         hero.applyBuff(Talent.ICanFightTooTracker.class);
     }
 
-    private void handleQuickActivation(Hero hero) {
+    public void handleQuickActivation(Hero hero) {
         if (!hero.hasTalent(Talent.QUICK_ACTIVATION)) return;
         if (hero.hasBuff(QuickActivationTalentCooldown.class)) return;
 
@@ -311,7 +272,7 @@ public class Detonator extends Artifact {
         hero.applyCooldownBuff(new QuickActivationTalentCooldown(), cooldown - 1);
     }
 
-    private void gainExp(int value) {
+    public void gainExp(int value) {
         if (level() == levelCap) return;
 
         exp += value;
@@ -327,6 +288,15 @@ public class Detonator extends Artifact {
 
     private int calculateLevelUpExp() {
         return Math.min(10 * level() * level() + 50, 500);
+    }
+
+    public boolean isCellWithinTrapSettingRange(int cell, Hero hero) {
+        int points = hero.pointsInTalent(Talent.DETONATOR_RANGE);
+        int radius = 1 + points;
+
+        int center = hero.getPosition();
+        Shape shape = new CircularShape(radius);
+        return shape.getCells(center).contains(cell);
     }
 
     protected void callExecuteSuper(Hero hero, String action) {

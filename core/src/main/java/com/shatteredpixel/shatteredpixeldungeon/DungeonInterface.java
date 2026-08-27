@@ -1,6 +1,5 @@
 package com.shatteredpixel.shatteredpixeldungeon;
 
-import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
 
 public interface DungeonInterface {
@@ -10,9 +9,17 @@ public interface DungeonInterface {
 
     void setTrap(Trap trap, int cell);
 
+    boolean hasVisibleTrapAt(int cell);
+
     int getCell(int cell);
 
     boolean isCellEmpty(int cell);
+
+    boolean isCellGrass(int cell);
+
+    boolean isCellOccupied(int cell);
+
+    boolean isCellOccupiedByFlyingCharacter(int cell);
 
     boolean isCellMapped(int cell);
 

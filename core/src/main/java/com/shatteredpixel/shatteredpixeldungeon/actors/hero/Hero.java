@@ -2627,4 +2627,8 @@ public class Hero extends Char {
 		TalismanOfForesight.Foresight talisman = getBuff(TalismanOfForesight.Foresight.class);
 		talisman.charge(value);
 	}
+
+	public int getPosition() {
+		return pos;
+	}
 }

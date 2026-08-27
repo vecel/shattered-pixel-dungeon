@@ -167,7 +167,10 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 
 public abstract class Char extends Actor {
-	
+
+	/**
+	 * @deprecated Use getPosition() instead
+	 */
 	public int pos = 0;
 	
 	public CharSprite sprite;

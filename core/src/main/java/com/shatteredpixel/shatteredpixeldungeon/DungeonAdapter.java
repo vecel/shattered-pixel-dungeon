@@ -1,5 +1,7 @@
 package com.shatteredpixel.shatteredpixeldungeon;
 
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
 import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
@@ -28,6 +30,11 @@ public class DungeonAdapter implements DungeonInterface {
     }
 
     @Override
+    public boolean hasVisibleTrapAt(int cell) {
+        return Dungeon.level.map[cell] == Terrain.TRAP;
+    }
+
+    @Override
     public int getCell(int cell) {
         return Dungeon.level.map[cell];
     }
@@ -35,6 +42,25 @@ public class DungeonAdapter implements DungeonInterface {
     @Override
     public boolean isCellEmpty(int cell) {
         return Dungeon.level.map[cell] == Terrain.EMPTY;
+    }
+
+    @Override
+    public boolean isCellGrass(int cell) {
+        return Dungeon.level.map[cell] == Terrain.GRASS;
+    }
+
+    @Override
+    public boolean isCellOccupied(int cell) {
+        return Actor.findChar(cell) != null;
+    }
+
+    @Override
+    public boolean isCellOccupiedByFlyingCharacter(int cell) {
+        if (!isCellOccupied(cell)) return false;
+        Char character = Actor.findChar(cell);
+        assert character != null;
+
+        return character.flying;
     }
 
     @Override
