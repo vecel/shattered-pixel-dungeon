@@ -11,11 +11,6 @@ public class DetonatorContext {
     private final DungeonInterface dungeon;
     private final GameLogger logger;
     private final TrapRegistry registry;
-
-    public TrapModifierProvider getTrapModifierProvider() {
-        return trapModifierProvider;
-    }
-
     private final TrapModifierProvider trapModifierProvider;
 
     public DetonatorContext(Hero hero, DungeonInterface dungeon, GameLogger logger, TrapRegistry registry, TrapModifierProvider trapModifierProvider) {
@@ -40,5 +35,9 @@ public class DetonatorContext {
 
     public TrapRegistry getRegistry() {
         return registry;
+    }
+
+    public TrapModifierProvider getTrapModifierProvider() {
+        return trapModifierProvider;
     }
 }

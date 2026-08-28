@@ -109,9 +109,8 @@ class TrapSettingActionTest {
         action.execute(1);
 
         verifyOnce(fixture.hero).dispelInvisibility();
-        verifyOnce(fixture.hero).onArtifactUsed();
+        verifyOnce(fixture.hero).onArtifactUsed(fixture.detonator);
         verifyOnce(fixture.hero.sprite).operate(anyInt());
-        verifyOnce(fixture.detonator).handleLastChargeSpent(fixture.hero);
     }
 
     @Test

@@ -96,7 +96,7 @@ public enum HeroClass {
 	CLERIC( HeroSubClass.PRIEST, HeroSubClass.PALADIN ),
 
 	@Todo(value = "Add starting weapon.")
-	SAPPER(HeroSubClass.NONE, HeroSubClass.NONE);
+	SAPPER(HeroSubClass.ENGINEER);
 
 	private HeroSubClass[] subClasses;
 

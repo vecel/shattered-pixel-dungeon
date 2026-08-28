@@ -5,6 +5,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Detonator;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.TrapRegistry;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.ActionTimeCalculator;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.modifiers.DamageModifier;
 import com.shatteredpixel.shatteredpixeldungeon.modifiers.TrapModifierProvider;
@@ -13,8 +14,11 @@ import com.shatteredpixel.shatteredpixeldungeon.utils.GameLogger;
 import java.util.List;
 
 public class TrapActivationAction extends DetonatorAction {
+
+    private final ActionTimeCalculator actionTime;
     public TrapActivationAction(Detonator detonator, DetonatorContext context) {
         super(detonator, context);
+        this.actionTime = new TrapActivationTimeCalculator();
     }
 
     @Override
@@ -52,13 +56,9 @@ public class TrapActivationAction extends DetonatorAction {
         detonator.gainExp(exp);
 
         hero.dispelInvisibility();
-        hero.onArtifactUsed();
+        hero.onArtifactUsed(detonator);
 
-        float time = detonator.calculateActivationTime(hero);
-
-        detonator.handleLastChargeSpent(hero);
-        detonator.handleTrapActivation(hero);
-        detonator.handleQuickActivation(hero);
+        float time = actionTime.calculate(hero);
 
         hero.spendAndNext(time);
     }

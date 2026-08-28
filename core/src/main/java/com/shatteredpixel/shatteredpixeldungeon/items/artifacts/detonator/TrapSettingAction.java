@@ -2,16 +2,25 @@ package com.shatteredpixel.shatteredpixeldungeon.items.artifacts.detonator;
 
 import com.shatteredpixel.shatteredpixeldungeon.DungeonInterface;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Detonator;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.ActionTimeCalculator;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.ChargeUsageCalculator;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GameLogger;
 
 import java.util.List;
 
 public class TrapSettingAction extends DetonatorAction {
+
+    private final ActionTimeCalculator actionTime;
+    private final ChargeUsageCalculator chargeUsage;
+
     public TrapSettingAction(Detonator detonator, DetonatorContext context) {
         super(detonator, context);
+        this.actionTime = new TrapSettingTimeCalculator();
+        this.chargeUsage = new TrapSettingChargeCalculator();
     }
 
     @Override
@@ -35,7 +44,7 @@ public class TrapSettingAction extends DetonatorAction {
 
         if (dungeon.isCellOccupied(cell) && !dungeon.isCellOccupiedByFlyingCharacter(cell)) return;
 
-        int setTrapCharge = 2;
+        int setTrapCharge = chargeUsage.calculate(hero);
         if (detonator.getCharge() < setTrapCharge) {
             logger.info(Messages.get(Detonator.class, "set_trap_no_charge"));
             return;
@@ -50,11 +59,11 @@ public class TrapSettingAction extends DetonatorAction {
         hero.sprite.operate(cell);
         hero.busy();
         hero.dispelInvisibility();
-        hero.onArtifactUsed();
+        hero.onArtifactUsed(detonator);
 
-        detonator.handleLastChargeSpent(hero);
+        float time = actionTime.calculate(hero);
 
-        hero.spendAndNext(1f);
+        hero.spendAndNext(time);
     }
 
     @Override

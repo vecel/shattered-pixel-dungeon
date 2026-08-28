@@ -100,6 +100,7 @@ import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClothArmor;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.glyphs.Stone;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.glyphs.Viscosity;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.AlchemistsToolkit;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.CapeOfThorns;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.CloakOfShadows;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.DriedRose;
@@ -2616,6 +2617,10 @@ public class Hero extends Char {
 
 	public void onArtifactUsed() {
 		Talent.onArtifactUsed(this);
+	}
+
+	public void onArtifactUsed(Artifact artifact) {
+		Talent.onArtifactUsed(this, artifact);
 	}
 
 	public boolean withinFieldOfView(int cell) {

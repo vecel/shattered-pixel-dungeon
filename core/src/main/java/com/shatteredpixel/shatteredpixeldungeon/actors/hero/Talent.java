@@ -21,6 +21,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.actors.hero;
 
+import com.karandys.todo.Todo;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
@@ -46,8 +47,12 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbili
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.Ratmogrify;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.DivineSense;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.RecallInscription;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.talents.ArtifactUsedTalentHandler;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.talents.ExplodingScrollsTalent;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.talents.FoodTalentHandler;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.talents.ICanFightTooTalent;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.talents.LastKaboomTalent;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.talents.QuickActivationTalent;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.talents.SappersMealTalent;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.talents.ScrollTalentHandler;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
@@ -60,6 +65,7 @@ import com.shatteredpixel.shatteredpixeldungeon.items.BrokenSeal;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClothArmor;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.CloakOfShadows;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HornOfPlenty;
@@ -211,7 +217,9 @@ public enum Talent {
 	// Sapper T1
 	SAPPERS_MEAL(192), TRAP_EXPERT(193), I_CAN_FIGHT_TOO(194), LAST_KABOOM(195),
 	// Sapper T2
-	/* We reuse MYSTICAL_MEAL with different name */ EXPLODING_SCROLLS(197), DETONATOR_RANGE(198), QUICK_ACTIVATION(199), TRAP_SENSE(200);
+	/* We reuse MYSTICAL_MEAL with different name */ EXPLODING_SCROLLS(197), DETONATOR_RANGE(198), QUICK_ACTIVATION(199), TRAP_SENSE(200),
+	// Sapper T3 - Engineer
+	TRAP_PROFICIENCY(203, 3);
 
 	private static final Map<Talent, FoodTalentHandler> foodHandlers = new EnumMap<>(Map.of(
 			SAPPERS_MEAL, new SappersMealTalent()
@@ -221,6 +229,11 @@ public enum Talent {
 			EXPLODING_SCROLLS, new ExplodingScrollsTalent()
 	));
 
+	private static final Map<Talent, ArtifactUsedTalentHandler> artifactHandlers = new EnumMap<>(Map.of(
+		I_CAN_FIGHT_TOO, new ICanFightTooTalent(),
+		LAST_KABOOM, new LastKaboomTalent(),
+		QUICK_ACTIVATION, new QuickActivationTalent()
+	));
 
 	public static class ImprovisedProjectileCooldown extends FlavourBuff{
 		public int icon() { return BuffIndicator.TIME; }
@@ -862,6 +875,19 @@ public enum Talent {
 		}
 	}
 
+	public static void onArtifactUsed(Hero hero, Artifact artifact) {
+		for (Talent talent : hero.getTalents()) {
+			if (!hero.hasTalent(talent)) continue;
+
+			ArtifactUsedTalentHandler handler = artifactHandlers.get(talent);
+			if (handler == null) continue;
+
+			int points = hero.pointsInTalent(talent);
+
+			handler.handleArtifactUsed(hero, artifact, points);
+		}
+	}
+
 	public static void onItemEquipped( Hero hero, Item item ){
 		boolean identify = false;
 		if (hero.pointsInTalent(VETERANS_INTUITION) == 2 && item instanceof Armor){
@@ -1095,6 +1121,8 @@ public enum Talent {
 			case CLERIC:
 				Collections.addAll(tierTalents, CLEANSE, LIGHT_READING);
 				break;
+			case SAPPER:
+				break;
 		}
 		for (Talent talent : tierTalents){
 			if (replacements.containsKey(talent)){
@@ -1158,6 +1186,9 @@ public enum Talent {
 				break;
 			case PALADIN:
 				Collections.addAll(tierTalents, LAY_ON_HANDS, AURA_OF_PROTECTION, WALL_OF_LIGHT);
+				break;
+			case ENGINEER:
+				Collections.addAll(tierTalents, TRAP_PROFICIENCY);
 				break;
 		}
 		for (Talent talent : tierTalents){

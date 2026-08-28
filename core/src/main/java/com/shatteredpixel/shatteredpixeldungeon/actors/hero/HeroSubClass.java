@@ -21,6 +21,7 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.actors.hero;
 
+import com.karandys.todo.Todo;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
@@ -48,7 +49,9 @@ public enum HeroSubClass {
 	MONK(HeroIcon.MONK),
 
 	PRIEST(HeroIcon.PRIEST),
-	PALADIN(HeroIcon.PALADIN);
+	PALADIN(HeroIcon.PALADIN),
+	@Todo("Add proper subclass icon")
+	ENGINEER(HeroIcon.MONK);
 
 	int icon;
 

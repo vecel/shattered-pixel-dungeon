@@ -43,7 +43,7 @@ public class TrapStorageAction extends DetonatorAction {
         hero.sprite.operate(cell);
         hero.busy();
         hero.dispelInvisibility();
-        hero.onArtifactUsed();
+        hero.onArtifactUsed(detonator);
 
         hero.spendAndNext(1f);
     }

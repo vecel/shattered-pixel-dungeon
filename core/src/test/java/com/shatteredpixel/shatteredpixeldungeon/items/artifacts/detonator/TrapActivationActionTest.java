@@ -112,10 +112,7 @@ class TrapActivationActionTest {
         action.execute(1);
 
         verifyOnce(fixture.hero).dispelInvisibility();
-        verifyOnce(fixture.hero).onArtifactUsed();
-        verifyOnce(fixture.detonator).handleLastChargeSpent(fixture.hero);
-        verifyOnce(fixture.detonator).handleQuickActivation(fixture.hero);
-        verifyOnce(fixture.detonator).handleTrapActivation(fixture.hero);
+        verifyOnce(fixture.hero).onArtifactUsed(fixture.detonator);
     }
 
     @Test

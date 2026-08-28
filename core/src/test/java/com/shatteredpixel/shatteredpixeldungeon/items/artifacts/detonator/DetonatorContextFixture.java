@@ -48,6 +48,7 @@ public class DetonatorContextFixture {
         doNothing().when(detonator).spendCharges(anyInt());
         doReturn(true).when(detonator).isCellWithinTrapSettingRange(anyInt(), eq(hero));
         doReturn(trap).when(detonator).getStoredTrap();
+        doReturn(true).when(detonator).hasStoredTrap();
     }
 
     public void withoutTrap() {

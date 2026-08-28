@@ -4,7 +4,6 @@ import com.karandys.todo.Todo;
 import com.shatteredpixel.shatteredpixeldungeon.DungeonInterface;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MagicImmune;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Regeneration;
-import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.cooldowns.QuickActivationTalentCooldown;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
@@ -17,7 +16,6 @@ import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfEnergy;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.TrapRegistry;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.TrapRegistryImpl;
-import com.shatteredpixel.shatteredpixeldungeon.levels.traps.WornDartTrap;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.CircularShape;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.Shape;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
@@ -42,6 +40,7 @@ public class Detonator extends Artifact {
     private final TrapRegistry trapRegistry;
     private final Set<Class<? extends Trap>> knownTraps = new HashSet<>();
     private final List<Class<? extends Trap>> storedTraps = new ArrayList<>();
+    private boolean actionConsumedCharge = false;
 
     {
         image = ItemSpriteSheet.ARTIFACT_DETONATOR;
@@ -100,6 +99,7 @@ public class Detonator extends Artifact {
             return;
         }
 
+        actionConsumedCharge = false;
         DetonatorContext context = new DetonatorContext(hero, dungeon, logger, trapRegistry,
                 trapModifierProvider);
 
@@ -169,6 +169,12 @@ public class Detonator extends Artifact {
         }
     }
 
+    @Override
+    public void spendCharges(int value) {
+        super.spendCharges(value);
+        actionConsumedCharge = true;
+    }
+
     public class DetonatorRecharge extends ArtifactBuff {
         @Override
         public boolean act() {
@@ -227,6 +233,10 @@ public class Detonator extends Artifact {
         return knownTraps.contains(trap.getClass());
     }
 
+    public boolean didSpendCharge() {
+        return actionConsumedCharge;
+    }
+
     @Todo("Add available cells highlight")
     private void applyAction(DetonatorAction strategy) {
         GameScene.selectCell(new CellSelector.Listener() {
@@ -243,40 +253,6 @@ public class Detonator extends Artifact {
         });
     }
 
-    public float calculateActivationTime(Hero hero) {
-        if (hero.hasTalent(Talent.QUICK_ACTIVATION) && !hero.hasBuff(QuickActivationTalentCooldown.class)) return 0;
-        return 1;
-    }
-
-    public void handleLastChargeSpent(Hero hero) {
-        if (hasCharges()) return;
-        int lastKaboomPoints = hero.pointsInTalent(Talent.LAST_KABOOM);
-        if (lastKaboomPoints == 0) return;
-
-        if (lastKaboomPoints >= 1) {
-            hero.applyShielding(4);
-        }
-        if (lastKaboomPoints == 2) {
-            hero.applyHealing(2);
-        }
-    }
-
-    public void handleTrapActivation(Hero hero) {
-        if (!hero.hasTalent(Talent.I_CAN_FIGHT_TOO)) return;
-        hero.applyBuff(Talent.ICanFightTooTracker.class);
-    }
-
-    public void handleQuickActivation(Hero hero) {
-        if (!hero.hasTalent(Talent.QUICK_ACTIVATION)) return;
-        if (hero.hasBuff(QuickActivationTalentCooldown.class)) return;
-
-        int points = hero.pointsInTalent(Talent.QUICK_ACTIVATION);
-        int cooldown = points == 1 ? 50 : 30;
-
-        logger.positive("That was a quick!");
-
-        hero.applyCooldownBuff(new QuickActivationTalentCooldown(), cooldown - 1);
-    }
 
     public void gainExp(int value) {
         if (level() == levelCap) return;
