@@ -23,21 +23,28 @@ import com.shatteredpixel.shatteredpixeldungeon.modifiers.TrapModifierProvider;
 import com.shatteredpixel.shatteredpixeldungeon.modifiers.TrapModifierProviderAdapter;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.CellSelector;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameSceneAdapter;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.GameSceneInterface;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GameLogger;
 import com.watabou.utils.Bundle;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-@Todo("Allow setting a trap on furrowed grass.")
-@Todo("Implement different trap setting.")
+@Todo("Allow setting a trap on 'mug', 'ash' tiles")
+@Todo("Add broken detonator as 'dead hero' remainings")
+@Todo("Add quickslot action prompt")
 public class Detonator extends Artifact {
 
     private final TrapModifierProvider trapModifierProvider;
     private final TrapRegistry trapRegistry;
+    private final GameSceneInterface scene;
+
     private final Set<Class<? extends Trap>> knownTraps = new HashSet<>();
     private final List<Class<? extends Trap>> storedTraps = new ArrayList<>();
     private boolean actionConsumedCharge = false;
@@ -64,12 +71,16 @@ public class Detonator extends Artifact {
         super();
         this.trapModifierProvider = new TrapModifierProviderAdapter();
         this.trapRegistry = new TrapRegistryImpl();
+        this.scene = new GameSceneAdapter();
     }
 
+    @Todo("Pass scene as dependency")
     Detonator(GameLogger logger, DungeonInterface dungeon, TrapModifierProvider trapModifierProvider, TrapRegistry trapRegistry) {
         super(logger, dungeon);
         this.trapModifierProvider = trapModifierProvider;
         this.trapRegistry = trapRegistry;
+
+        this.scene = new GameSceneAdapter();
     }
 
     @Override
@@ -156,6 +167,7 @@ public class Detonator extends Artifact {
     public void storeInBundle(Bundle bundle) {
         super.storeInBundle(bundle);
         bundle.put("activated_traps", knownTraps.toArray(new Class[0]));
+        bundle.put("stored_trap", storedTraps.toArray(new Class[0]));
     }
 
     @Override
@@ -164,8 +176,14 @@ public class Detonator extends Artifact {
         if (!bundle.contains("activated_traps")) {
             throw new IllegalStateException("Cannot restore Detonator's activated traps, cause there is no field 'activated_traps' in bundle.");
         }
+        if (!bundle.contains("stored_trap")) {
+            throw new IllegalStateException("Cannot restore Detonator's stored trap, cause there is no field 'stored_trap' in bundle.");
+        }
         for (Class<? extends Trap> trap : bundle.getClassArray("activated_traps")) {
             knownTraps.add(trap);
+        }
+        for (Class<? extends Trap> trap : bundle.getClassArray("stored_trap")) {
+            storedTraps.add(trap);
         }
     }
 
@@ -237,13 +255,19 @@ public class Detonator extends Artifact {
         return actionConsumedCharge;
     }
 
-    @Todo("Add available cells highlight")
     private void applyAction(DetonatorAction strategy) {
+        scene.highlight(strategy.availableCells());
+
         GameScene.selectCell(new CellSelector.Listener() {
             @Override
             public void onSelect(Integer cell) {
                 if (cell == null) return;
                 strategy.execute(cell);
+            }
+
+            @Override
+            public void onCancel() {
+                scene.cancelHighlight();
             }
 
             @Override
@@ -272,6 +296,7 @@ public class Detonator extends Artifact {
         return Math.min(10 * level() * level() + 50, 500);
     }
 
+    @Deprecated
     public boolean isCellWithinTrapSettingRange(int cell, Hero hero) {
         int points = hero.pointsInTalent(Talent.DETONATOR_RANGE);
         int radius = 1 + points;

@@ -20,7 +20,9 @@ import com.shatteredpixel.shatteredpixeldungeon.DungeonInterface;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MagicImmune;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.ToxicTrap;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.TrapRegistry;
+import com.shatteredpixel.shatteredpixeldungeon.levels.traps.WornDartTrap;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.CircularShape;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GdxApplicationExtension;
 import com.shatteredpixel.shatteredpixeldungeon.utils.MockHero;
@@ -33,6 +35,7 @@ import com.shatteredpixel.shatteredpixeldungeon.modifiers.DamageModifier;
 import com.shatteredpixel.shatteredpixeldungeon.modifiers.TrapModifierProvider;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.CellSelector;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.watabou.utils.Bundle;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -140,17 +143,36 @@ class DetonatorTest {
         fail("Not implemented yet");
     }
 
-    private CellSelector.Listener captureListener(String action) {
-        ArgumentCaptor<CellSelector.Listener> captor = ArgumentCaptor.forClass(CellSelector.Listener.class);
-        CellSelector.Listener listener;
+    @Test
+    void saves_known_traps_to_bundle() {
+        Trap dartTrap = new WornDartTrap();
+        Trap gasTrap = new ToxicTrap();
 
-        try (MockedStatic<GameScene> mockScene = mockStatic(GameScene.class)) {
-            detonator.execute(mockHero, action);
-            mockScene.verify(() -> GameScene.selectCell(captor.capture()));
-            listener = captor.getValue();
-            assertNotNull(listener);
-        }
+        Bundle bundle = new Bundle();
+        detonator.setKnown(dartTrap);
+        detonator.setKnown(gasTrap);
+        detonator.storeInBundle(bundle);
 
-        return listener;
+        Detonator fresh = new Detonator();
+        fresh.restoreFromBundle(bundle);
+
+        assertTrue(fresh.isKnown(dartTrap));
+        assertTrue(fresh.isKnown(gasTrap));
+    }
+
+    @Test
+    void saves_stored_trap_to_bundle() {
+        Trap gasTrap = new ToxicTrap();
+
+        Bundle bundle = new Bundle();
+        detonator.storeTrap(gasTrap);
+        detonator.storeInBundle(bundle);
+
+        Detonator fresh = new Detonator();
+        fresh.restoreFromBundle(bundle);
+
+        Trap stored = fresh.getStoredTrap();
+
+        assertEquals(gasTrap.getClass(), stored.getClass());
     }
 }

@@ -47,6 +47,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.ArmorAbili
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.abilities.Ratmogrify;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.DivineSense;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.RecallInscription;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.talents.ArtifactUsedEvent;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.talents.ArtifactUsedTalentHandler;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.talents.ExplodingScrollsTalent;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.talents.FoodTalentHandler;
@@ -875,7 +876,8 @@ public enum Talent {
 		}
 	}
 
-	public static void onArtifactUsed(Hero hero, Artifact artifact) {
+	public static void onArtifactUsed(ArtifactUsedEvent event) {
+		Hero hero = event.hero();
 		for (Talent talent : hero.getTalents()) {
 			if (!hero.hasTalent(talent)) continue;
 
@@ -884,7 +886,7 @@ public enum Talent {
 
 			int points = hero.pointsInTalent(talent);
 
-			handler.handleArtifactUsed(hero, artifact, points);
+			handler.handleArtifactUsed(event, points);
 		}
 	}
 

@@ -76,6 +76,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.HallowedGroun
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.HolyWard;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.HolyWeapon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.Smite;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.talents.ArtifactUsedEvent;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mimic;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Monk;
@@ -2619,8 +2620,8 @@ public class Hero extends Char {
 		Talent.onArtifactUsed(this);
 	}
 
-	public void onArtifactUsed(Artifact artifact) {
-		Talent.onArtifactUsed(this, artifact);
+	public void onArtifactUsed(ArtifactUsedEvent event) {
+		Talent.onArtifactUsed(event);
 	}
 
 	public boolean withinFieldOfView(int cell) {

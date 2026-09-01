@@ -5,5 +5,10 @@ import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact;
 
 public interface ArtifactUsedTalentHandler {
 
-    void handleArtifactUsed(Hero hero, Artifact artifact, int points);
+    default void handleArtifactUsed(Hero hero, Artifact artifact, int points) {
+        ArtifactUsedEvent event = new ArtifactUsedEvent(hero, artifact, "UNKNOWN");
+        handleArtifactUsed(event, points);
+    }
+
+    void handleArtifactUsed(ArtifactUsedEvent event, int points);
 }

@@ -185,6 +185,7 @@ public class GameScene extends PixelScene {
 	private Group ripples;
 	private Group plants;
 	private Group traps;
+	private Group highlights;
 	private Group heaps;
 	private Group mobs;
 	private Group floorEmitters;
@@ -294,10 +295,13 @@ public class GameScene extends PixelScene {
 
 		heaps = new Group();
 		add( heaps );
-		
+
 		for ( Heap heap : Dungeon.level.heaps.valueList() ) {
 			addHeapSprite( heap );
 		}
+
+		highlights = new Group();
+		add(highlights);
 
 		emitters = new Group();
 		effects = new Group();
@@ -1185,7 +1189,15 @@ public class GameScene extends PixelScene {
 	public static void effectOverFog( Visual effect ) {
 		scene.overFogEffects.add( effect );
 	}
-	
+
+	public static void highlight(Visual effect) {
+		scene.highlights.add(effect);
+	}
+
+	public static void removeHighlight() {
+		scene.highlights.clear();
+	}
+
 	public static Ripple ripple( int pos ) {
 		if (scene != null) {
 			Ripple ripple = (Ripple) scene.ripples.recycle(Ripple.class);
@@ -1551,6 +1563,7 @@ public class GameScene extends PixelScene {
 	public static void selectCell( CellSelector.Listener listener ) {
 		if (cellSelector.listener != null && cellSelector.listener != defaultCellListener){
 			cellSelector.listener.onSelect(null);
+			cellSelector.listener.onCancel();
 		}
 		cellSelector.listener = listener;
 		cellSelector.enabled = Dungeon.hero.ready;

@@ -2,6 +2,7 @@ package com.shatteredpixel.shatteredpixeldungeon.items.artifacts.detonator;
 
 import com.shatteredpixel.shatteredpixeldungeon.DungeonInterface;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.talents.ArtifactUsedEvent;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Detonator;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.TrapRegistry;
@@ -56,7 +57,9 @@ public class TrapActivationAction extends DetonatorAction {
         detonator.gainExp(exp);
 
         hero.dispelInvisibility();
-        hero.onArtifactUsed(detonator);
+
+        ArtifactUsedEvent event = new ArtifactUsedEvent(hero, detonator, Detonator.AC_ACTIVATE);
+        hero.onArtifactUsed(event);
 
         float time = actionTime.calculate(hero);
 

@@ -43,10 +43,11 @@ public class ForesightSearchStrategy extends SearchStrategy {
     }
 
     private void searchOnCell(Hero hero, int cell) {
-        if (cell == hero.pos) return;
+        int position = hero.getPosition();
+        if (cell == position) return;
 
         if (!dungeon.isCellMapped(cell)) {
-            scene.effectOverFog(new CheckedCell(cell, hero.pos));
+            scene.effectOverFog(new CheckedCell(cell, position));
         }
 
         dungeon.setMapped(cell);

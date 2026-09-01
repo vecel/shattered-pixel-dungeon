@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.talents.ArtifactUsedEvent;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Detonator;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.modifiers.DamageModifier;
@@ -112,7 +113,7 @@ class TrapActivationActionTest {
         action.execute(1);
 
         verifyOnce(fixture.hero).dispelInvisibility();
-        verifyOnce(fixture.hero).onArtifactUsed(fixture.detonator);
+        verifyOnce(fixture.hero).onArtifactUsed(any(ArtifactUsedEvent.class));
     }
 
     @Test

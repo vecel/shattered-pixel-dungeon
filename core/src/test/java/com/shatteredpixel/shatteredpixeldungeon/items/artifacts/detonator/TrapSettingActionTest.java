@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.talents.ArtifactUsedEvent;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Detonator;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
@@ -109,7 +110,7 @@ class TrapSettingActionTest {
         action.execute(1);
 
         verifyOnce(fixture.hero).dispelInvisibility();
-        verifyOnce(fixture.hero).onArtifactUsed(fixture.detonator);
+        verifyOnce(fixture.hero).onArtifactUsed(any(ArtifactUsedEvent.class));
         verifyOnce(fixture.hero.sprite).operate(anyInt());
     }
 

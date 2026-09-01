@@ -29,6 +29,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 import com.watabou.input.ControllerHandler;
 import com.watabou.input.GameAction;
 import com.watabou.input.KeyBindings;
@@ -42,6 +43,8 @@ import com.watabou.utils.GameMath;
 import com.watabou.utils.Point;
 import com.watabou.utils.PointF;
 import com.watabou.utils.Signal;
+
+import org.jetbrains.annotations.NotNull;
 
 public class CellSelector extends ScrollArea {
 
@@ -487,6 +490,7 @@ public class CellSelector extends ScrollArea {
 		
 		if (listener != null) {
 			listener.onSelect( null );
+			listener.onCancel();
 		}
 		
 		GameScene.ready();
@@ -516,7 +520,37 @@ public class CellSelector extends ScrollArea {
 	}
 	
 	public static abstract class Listener {
-		public abstract void onSelect( Integer cell );
+		/**
+		 * Invoked when a cell is successfully selected by the user.
+		 *
+		 * <p><b>Note on Cancellation:</b> Historically, this method was also used to handle
+		 * cancellations by passing {@code null} as the cell parameter. This behavior is retained
+		 * strictly for backward compatibility. For new code, it is preferred to override
+		 * {@link #onCancel()} to handle cancellations instead of checking for a {@code null} cell here.
+		 *
+		 * <p><b>Important 1:</b> {@code onSelect(null)} and {@link #onCancel()} are functionally
+		 * equivalent. You should not implement cancellation logic in both places.
+		 *
+		 * <p><b>Important 2:</b> You must return from onSelect(Integer) if argument is null via
+		 * {@code if (cell == null) return;} to avoid errors when unboxing to primitive {@code int}
+		 * value.
+		 *
+		 * @param cell The map index of the selected cell, or {@code null} if the action was
+		 *             canceled (legacy backward-compatibility behavior).
+		 */
+		public abstract void onSelect(Integer cell);
+
+		/**
+		 * Invoked when the cell selection process is finished (after {@link #onSelect(Integer)})
+		 * or is aborted by the user (e.g., by pressing a cancel button or the device back button).
+		 *
+		 * <p>This is the <b>preferred</b> method for handling cancellations. It serves as a cleaner
+		 * alternative to the legacy approach of passing {@code null} to {@link #onSelect(Integer)}.
+		 *
+		 * <p><b>Important:</b> Because this is equivalent to {@code onSelect(null)}, ensure you
+		 * do not implement cancellation logic in both methods to avoid redundant or conflicting behavior.
+		 */
+		public void onCancel() {}
 
 		public void onRightClick( Integer cell ){} //do nothing by default
 

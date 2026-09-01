@@ -1,12 +1,17 @@
 package com.shatteredpixel.shatteredpixeldungeon.items.artifacts.detonator;
 
+import com.karandys.todo.Todo;
 import com.shatteredpixel.shatteredpixeldungeon.DungeonInterface;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.talents.ArtifactUsedEvent;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Detonator;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.ActionTimeCalculator;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.ChargeUsageCalculator;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.CircularShape;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Shape;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.SquareShape;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GameLogger;
 
@@ -59,16 +64,26 @@ public class TrapSettingAction extends DetonatorAction {
         hero.sprite.operate(cell);
         hero.busy();
         hero.dispelInvisibility();
-        hero.onArtifactUsed(detonator);
+
+        ArtifactUsedEvent event = new ArtifactUsedEvent(hero, detonator, Detonator.AC_SET_TRAP);
+        hero.onArtifactUsed(event);
 
         float time = actionTime.calculate(hero);
 
         hero.spendAndNext(time);
     }
 
+    @Todo("Filter for available cells from circular shape")
     @Override
     public List<Integer> availableCells() {
-        return List.of();
+        Hero hero = context.getHero();
+
+        int points = hero.pointsInTalent(Talent.DETONATOR_RANGE);
+        int radius = 1 + points;
+
+        Shape shape = new CircularShape(radius);
+
+        return shape.getCells(hero.getPosition());
     }
 
     @Override

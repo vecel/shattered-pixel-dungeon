@@ -8,8 +8,9 @@ import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Detonator;
 
 public class QuickActivationTalent implements ArtifactUsedTalentHandler {
     @Override
-    public void handleArtifactUsed(Hero hero, Artifact artifact, int points) {
-        if (!(artifact instanceof Detonator)) return;
+    public void handleArtifactUsed(ArtifactUsedEvent event, int points) {
+        if (!(event.artifact() instanceof Detonator)) return;
+        Hero hero = event.hero();
         if (hero.hasBuff(QuickActivationTalentCooldown.class)) return;
 
         int cooldown = points == 1 ? 50 : 30;
