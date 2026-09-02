@@ -5,10 +5,15 @@ import static com.shatteredpixel.shatteredpixeldungeon.utils.MockitoExtension.ve
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.talents.ArtifactUsedEvent;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Detonator;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
+import com.shatteredpixel.shatteredpixeldungeon.mechanics.Shape;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GdxApplicationExtension;
 import com.shatteredpixel.shatteredpixeldungeon.utils.logger.LogEntry;
@@ -18,6 +23,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import java.util.List;
+
 @ExtendWith(GdxApplicationExtension.class)
 class TrapSettingActionTest {
     private TrapSettingAction action;
@@ -26,7 +33,11 @@ class TrapSettingActionTest {
     @BeforeEach
     void setUp() {
         fixture = new DetonatorContextFixture();
-        action = new TrapSettingAction(fixture.detonator, fixture.context);
+        action = spy(new TrapSettingAction(fixture.detonator, fixture.context));
+
+        Shape actionRange = mock(Shape.class);
+        when(actionRange.getCells(anyInt())).thenReturn(List.of(1, 2, 3, 4));
+        when(action.getActionRange()).thenReturn(actionRange);
     }
     
     @Test
@@ -131,5 +142,19 @@ class TrapSettingActionTest {
         assertTrue(fixture.logger.contains(entry));
         verifyNever(fixture.detonator).spendCharges(anyInt());
         verifyNever(fixture.dungeon).setTrap(any(Trap.class), anyInt());
+    }
+
+    @Test
+    void calculates_available_cells_correctly() {
+        when(fixture.hero.getPosition()).thenReturn(1);
+        when(fixture.dungeon.isCellEmpty(anyInt())).thenReturn(false);
+        when(fixture.dungeon.isCellGrass(anyInt())).thenReturn(false);
+        when(fixture.dungeon.isCellEmpty(2)).thenReturn(true);
+        when(fixture.dungeon.isCellGrass(3)).thenReturn(true);
+
+        List<Integer> cells = action.availableCells();
+
+        assertEquals(2, cells.size());
+        assertTrue(cells.containsAll(List.of(2, 3)));
     }
 }

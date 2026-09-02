@@ -27,7 +27,7 @@ public class HighlightedCell extends Image {
     public void update() {
         time += Game.elapsed;
 
-        float alpha = 0.7f + (float) Math.sin(time * 4) * 0.1f;
+        float alpha = 0.9f + (float) Math.sin(time * 4) * 0.1f;
         alpha(alpha);
     }
 }

@@ -1,6 +1,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.items.artifacts;
 
 import com.karandys.todo.Todo;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.DungeonInterface;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MagicImmune;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Regeneration;
@@ -38,7 +39,6 @@ import java.util.Set;
 
 @Todo("Allow setting a trap on 'mug', 'ash' tiles")
 @Todo("Add broken detonator as 'dead hero' remainings")
-@Todo("Add quickslot action prompt")
 public class Detonator extends Artifact {
 
     private final TrapModifierProvider trapModifierProvider;
@@ -112,7 +112,7 @@ public class Detonator extends Artifact {
 
         actionConsumedCharge = false;
         DetonatorContext context = new DetonatorContext(hero, dungeon, logger, trapRegistry,
-                trapModifierProvider);
+            trapModifierProvider);
 
         DetonatorAction strategy;
 
@@ -160,7 +160,7 @@ public class Detonator extends Artifact {
         if (cursed) return desc + "\n\n" + Messages.get(this, "desc_cursed");
         if (!hasStoredTrap()) return desc + "\n\n" + Messages.get(this, "desc_no_store");
 
-        return desc;
+        return desc + "\n\n" + Messages.get(this, "desc_stored", getStoredTrap().getClass().getName());
     }
 
     @Override

@@ -41,12 +41,18 @@ public class DungeonAdapter implements DungeonInterface {
 
     @Override
     public boolean isCellEmpty(int cell) {
-        return Dungeon.level.map[cell] == Terrain.EMPTY;
+        int terrain = Dungeon.level.map[cell];
+        return terrain == Terrain.EMPTY || terrain == Terrain.EMPTY_DECO || terrain == Terrain.CUSTOM_DECO_EMPTY;
     }
 
     @Override
     public boolean isCellGrass(int cell) {
         return Dungeon.level.map[cell] == Terrain.GRASS;
+    }
+
+    @Override
+    public boolean isCellEmbers(int cell) {
+        return Dungeon.level.map[cell] == Terrain.EMBERS;
     }
 
     @Override

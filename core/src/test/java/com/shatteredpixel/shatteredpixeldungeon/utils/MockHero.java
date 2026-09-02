@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Hunger;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Belongings;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 
 public class MockHero {
@@ -35,6 +36,8 @@ public class MockHero {
 
         when(hero.getBuff(Hunger.class)).thenReturn(hunger);
         when(hero.affectBuff(Hunger.class)).thenReturn(hunger);
+        when(hero.hasTalent(any(Talent.class))).thenReturn(false);
+        when(hero.pointsInTalent(any(Talent.class))).thenReturn(0);
 
         when(hero.withinFieldOfView(anyInt())).thenReturn(true);
     }

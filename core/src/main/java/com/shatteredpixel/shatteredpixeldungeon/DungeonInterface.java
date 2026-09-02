@@ -16,6 +16,7 @@ public interface DungeonInterface {
     boolean isCellEmpty(int cell);
 
     boolean isCellGrass(int cell);
+    boolean isCellEmbers(int cell);
 
     boolean isCellOccupied(int cell);
 

@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 class LastKaboomTalentTest {
 
     private LastKaboomTalent talent;
+    private ArtifactUsedEvent event;
     private Hero hero;
     private Detonator detonator;
     private int points;
@@ -33,6 +34,7 @@ class LastKaboomTalentTest {
         healing = 2;
 
         talent = new LastKaboomTalent();
+        event = new ArtifactUsedEvent(hero, detonator, Detonator.AC_ACTIVATE);
 
         when(detonator.didSpendCharge()).thenReturn(true);
     }
@@ -41,7 +43,7 @@ class LastKaboomTalentTest {
     void applies_shielding_when_talent_has_one_point() {
         when(detonator.getCharge()).thenReturn(0);
 
-        talent.handleArtifactUsed(hero, detonator, points);
+        talent.handleArtifactUsed(event, points);
 
         verifyOnce(hero).applyShielding(shielding);
     }
@@ -51,7 +53,7 @@ class LastKaboomTalentTest {
         points = 2;
         when(detonator.getCharge()).thenReturn(0);
 
-        talent.handleArtifactUsed(hero, detonator, points);
+        talent.handleArtifactUsed(event, points);
 
         verifyOnce(hero).applyShielding(shielding);
         verifyOnce(hero).applyHealing(healing);
@@ -77,7 +79,7 @@ class LastKaboomTalentTest {
 
     @Test
     void does_not_trigger_when_trap_is_stored_or_set() {
-        ArtifactUsedEvent event = new ArtifactUsedEvent(hero, detonator, Detonator.AC_STORE_TRAP);
+        event = new ArtifactUsedEvent(hero, detonator, Detonator.AC_STORE_TRAP);
 
         talent.handleArtifactUsed(event, points);
 

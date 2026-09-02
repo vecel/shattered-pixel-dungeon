@@ -2502,8 +2502,6 @@ public class Hero extends Char {
 		
 		if (!isAlive()) return false;
 
-
-		
 		boolean foresight = hasBuff(Foresight.class);
 		boolean foresightScan = foresight && !Dungeon.level.mapped[pos];
 
@@ -2533,7 +2531,6 @@ public class Hero extends Char {
 
 		strategy.execute(this);
 		strategy.executePostSearchAction(this);
-
 
 		if (talisman != null) talisman.checkAwareness();
 
