@@ -24,31 +24,48 @@ package com.shatteredpixel.shatteredpixeldungeon.levels.painters;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.TrapMechanism;
 import com.shatteredpixel.shatteredpixeldungeon.journal.Document;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Patch;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
+import com.shatteredpixel.shatteredpixeldungeon.levels.generators.traps.CompositeTrapsGenerationModifierProvider;
+import com.shatteredpixel.shatteredpixeldungeon.levels.generators.traps.HeroTrapsGenerationModifierProvider;
+import com.shatteredpixel.shatteredpixeldungeon.levels.generators.traps.LevelTrapsGenerationModifiersProvider;
 import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room;
 import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.connection.ConnectionRoom;
 import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special.SpecialRoom;
 import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.standard.StandardRoom;
+import com.shatteredpixel.shatteredpixeldungeon.levels.generators.traps.StandardTrapsGenerator;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
+import com.shatteredpixel.shatteredpixeldungeon.levels.generators.traps.TrapsGenerationModifierProvider;
+import com.shatteredpixel.shatteredpixeldungeon.levels.generators.traps.TrapsGenerator;
+import com.shatteredpixel.shatteredpixeldungeon.levels.generators.traps.TrapsPool;
+import com.shatteredpixel.shatteredpixeldungeon.utils.HeroProvider;
+import com.shatteredpixel.shatteredpixeldungeon.utils.HeroProviderAdapter;
 import com.watabou.noosa.Game;
 import com.watabou.utils.Graph;
 import com.watabou.utils.PathFinder;
 import com.watabou.utils.Point;
 import com.watabou.utils.Random;
 import com.watabou.utils.Rect;
-import com.watabou.utils.Reflection;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
 public abstract class RegularPainter extends Painter {
+
+	private final TrapsGenerator generator;
+	private final HeroProvider heroProvider;
 	
 	private float waterFill = 0f;
 	private int waterSmoothness;
+
+	public RegularPainter() {
+		this.generator = new StandardTrapsGenerator();
+		this.heroProvider = new HeroProviderAdapter();
+	}
 	
 	public RegularPainter setWater(float fill, int smoothness){
 		waterFill = fill;
@@ -64,11 +81,21 @@ public abstract class RegularPainter extends Painter {
 		grassSmoothness = smoothness;
 		return this;
 	}
-	
+
+	@Deprecated
 	private int nTraps = 0;
+	@Deprecated
 	private Class<? extends Trap>[] trapClasses;
+	@Deprecated
 	private float[] trapChances;
-	
+
+	/**
+	 * Sets values needed for legacy trap generation.
+	 *
+	 * @deprecated Trap generation mechanism is now extracted to {@link TrapsGenerator}. Generator
+	 * returns the pool traps are generated from.
+	 */
+	@Deprecated
 	public RegularPainter setTraps(int num, Class<?>[] classes, float[] chances){
 		nTraps = num;
 		trapClasses = (Class<? extends Trap>[]) classes;
@@ -136,19 +163,17 @@ public abstract class RegularPainter extends Painter {
 		//e.g. this minimizes mossy clump's effect on levelgen
 		Random.pushGenerator(Random.Long());
 
-			if (waterFill > 0f) {
-				paintWater( level, rooms );
-			}
+		if (waterFill > 0f) {
+			paintWater( level, rooms );
+		}
 
-			if (grassFill > 0f){
-				paintGrass( level, rooms );
-			}
+		if (grassFill > 0f){
+			paintGrass( level, rooms );
+		}
 
-			if (nTraps > 0){
-				paintTraps( level, rooms );
-			}
-		
-			decorate( level, rooms );
+		paintTraps(level, rooms);
+
+		decorate( level, rooms );
 
 		Random.popGenerator();
 		
@@ -421,57 +446,71 @@ public abstract class RegularPainter extends Painter {
 		}
 	}
 	
-	protected void paintTraps( Level l, ArrayList<Room> rooms ) {
+	protected void paintTraps( Level level, ArrayList<Room> rooms ) {
 		ArrayList<Integer> validCells = new ArrayList<>();
-		
-		if (!rooms.isEmpty()){
-			for (Room r : rooms){
-				for (Point p : r.trapPlaceablePoints()){
-					int i = l.pointToCell(p);
-					if (l.map[i] == Terrain.EMPTY){
+
+		if (!rooms.isEmpty()) {
+			for (Room r : rooms) {
+				for (Point p : r.trapPlaceablePoints()) {
+					int i = level.pointToCell(p);
+					if (level.map[i] == Terrain.EMPTY) {
 						validCells.add(i);
 					}
 				}
 			}
 		} else {
-			for (int i = 0; i < l.length(); i ++) {
-				if (l.map[i] == Terrain.EMPTY){
+			for (int i = 0; i < level.length(); i++) {
+				if (level.map[i] == Terrain.EMPTY) {
 					validCells.add(i);
 				}
 			}
 		}
-		
+
+
 		//no more than one trap every 5 valid tiles.
-		nTraps = Math.min(nTraps, validCells.size()/5);
+		nTraps = Math.min(nTraps, validCells.size() / 5);
 
 		//for traps that want to avoid being in hallways
 		ArrayList<Integer> validNonHallways = new ArrayList<>();
 
 		//temporarily use the passable array for the next step
-		for (int i = 0; i < l.length(); i++){
-			l.passable[i] = (Terrain.flags[l.map[i]] & Terrain.PASSABLE) != 0;
+		for (int i = 0; i < level.length(); i++) {
+			level.passable[i] = (Terrain.flags[level.map[i]] & Terrain.PASSABLE) != 0;
 		}
 
-		for (int i : validCells){
-			if ((l.passable[i+PathFinder.CIRCLE4[0]] || l.passable[i+PathFinder.CIRCLE4[2]])
-					&& (l.passable[i+PathFinder.CIRCLE4[1]] || l.passable[i+PathFinder.CIRCLE4[3]])){
+		for (int i : validCells) {
+			if ((level.passable[i + PathFinder.CIRCLE4[0]] || level.passable[i + PathFinder.CIRCLE4[2]])
+					&& (level.passable[i + PathFinder.CIRCLE4[1]] || level.passable[i + PathFinder.CIRCLE4[3]])) {
 				validNonHallways.add(i);
 			}
 		}
 
 		//no more than one trap every 5 valid tiles.
-		nTraps = Math.min(nTraps, validCells.size()/5);
+		nTraps = Math.min(nTraps, validCells.size() / 5);
 
 		float revealedChance = TrapMechanism.revealHiddenTrapChance();
 		float revealInc = 0;
 
-		//5x traps on traps level feeling, but the extra traps are all visible
-		for (int i = 0; i < (l.feeling == Level.Feeling.TRAPS ? 5*nTraps : nTraps); i++) {
+		Hero hero = heroProvider.get();
+		TrapsPool pool = generator.getPool(level);
 
-			Trap trap = Reflection.newInstance(trapClasses[Random.chances( trapChances )]);
+		if (pool == null) {
+			throw new IllegalArgumentException("Cannot get traps pool for level: " + level);
+		}
+
+		TrapsGenerationModifierProvider provider = new CompositeTrapsGenerationModifierProvider(
+			new LevelTrapsGenerationModifiersProvider(level),
+			new HeroTrapsGenerationModifierProvider(hero)
+		);
+
+		int trapCount = generator.getCount(level, provider);
+
+		for (int i = 0; i < trapCount; i++) {
+
+			Trap trap = pool.createTrap();
 
 			Integer trapPos;
-			if (trap.avoidsHallways && !validNonHallways.isEmpty()){
+			if (trap.avoidsHallways && !validNonHallways.isEmpty()) {
 				trapPos = Random.element(validNonHallways);
 			} else {
 				trapPos = Random.element(validCells);
@@ -488,10 +527,9 @@ public abstract class RegularPainter extends Painter {
 				trap.hide();
 			}
 
-			l.setTrap( trap, trapPos );
+			level.setTrap(trap, trapPos);
 			//some traps will not be hidden
-			l.map[trapPos] = trap.visible ? Terrain.TRAP : Terrain.SECRET_TRAP;
+			level.map[trapPos] = trap.visible ? Terrain.TRAP : Terrain.SECRET_TRAP;
 		}
 	}
-	
 }

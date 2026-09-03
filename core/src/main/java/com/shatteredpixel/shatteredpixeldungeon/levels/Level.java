@@ -1654,4 +1654,8 @@ public abstract class Level implements Bundlable {
 				return "";
 		}
 	}
+
+	public int getDepth() {
+		return Dungeon.depth;
+	}
 }

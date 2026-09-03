@@ -37,8 +37,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-@Todo("Allow setting a trap on 'mug', 'ash' tiles")
-@Todo("Add broken detonator as 'dead hero' remainings")
 public class Detonator extends Artifact {
 
     private final TrapModifierProvider trapModifierProvider;

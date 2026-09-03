@@ -220,14 +220,14 @@ public enum Talent {
 	// Sapper T2
 	/* We reuse MYSTICAL_MEAL with different name */ EXPLODING_SCROLLS(197), DETONATOR_RANGE(198), QUICK_ACTIVATION(199), TRAP_SENSE(200),
 	// Sapper T3 - Engineer
-	TRAP_PROFICIENCY(203, 3);
+	EXPLOSION_WILL(201, 3), HANDY_DETONATOR(202, 3),  TRAP_PROFICIENCY(203, 3), HEAVY_AMMO(204, 3);
 
 	private static final Map<Talent, FoodTalentHandler> foodHandlers = new EnumMap<>(Map.of(
-			SAPPERS_MEAL, new SappersMealTalent()
+		SAPPERS_MEAL, new SappersMealTalent()
 	));
 
 	private static final Map<Talent, ScrollTalentHandler> scrollHandlers = new EnumMap<>(Map.of(
-			EXPLODING_SCROLLS, new ExplodingScrollsTalent()
+		EXPLODING_SCROLLS, new ExplodingScrollsTalent()
 	));
 
 	private static final Map<Talent, ArtifactUsedTalentHandler> artifactHandlers = new EnumMap<>(Map.of(
