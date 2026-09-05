@@ -21,10 +21,15 @@
 
 package com.shatteredpixel.shatteredpixeldungeon;
 
+import com.karandys.shatteredpixeldungeon.console.ConsoleAware;
+import com.karandys.shatteredpixeldungeon.console.GameConsole;
+import com.karandys.shatteredpixeldungeon.console.commands.LevelUpCommand;
+import com.karandys.shatteredpixeldungeon.console.commands.TenguMaskCommand;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.TitleScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.WelcomeScene;
+import com.shatteredpixel.shatteredpixeldungeon.utils.GameLoggerAdapter;
 import com.watabou.noosa.Game;
 import com.watabou.noosa.audio.Music;
 import com.watabou.noosa.audio.Sample;
@@ -32,6 +37,9 @@ import com.watabou.utils.DeviceCompat;
 import com.watabou.utils.PlatformSupport;
 
 public class ShatteredPixelDungeon extends Game {
+
+	private GameContext context;
+	private GameConsole console;
 
 	//rankings from v1.2.3 and older use a different score formula, so this reference is kept
 	public static final int v1_2_3 = 628;
@@ -67,7 +75,15 @@ public class ShatteredPixelDungeon extends Game {
 		Sample.INSTANCE.volume( SPDSettings.SFXVol()*SPDSettings.SFXVol()/100f );
 
 		Sample.INSTANCE.load( Assets.Sounds.all );
-		
+
+		context = new GameContext(
+			new DungeonAdapter(),
+			new GameLoggerAdapter()
+		);
+
+		console = new GameConsole(context);
+		console.register(new LevelUpCommand());
+		console.register(new TenguMaskCommand());
 	}
 
 	@Override
@@ -107,6 +123,9 @@ public class ShatteredPixelDungeon extends Game {
 		super.switchScene();
 		if (scene instanceof PixelScene){
 			((PixelScene) scene).restoreWindows();
+		}
+		if (scene instanceof ConsoleAware) {
+			((ConsoleAware) scene).setConsole(console);
 		}
 	}
 	

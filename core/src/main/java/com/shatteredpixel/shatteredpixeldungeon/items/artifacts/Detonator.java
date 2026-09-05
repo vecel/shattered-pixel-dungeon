@@ -17,11 +17,9 @@ import com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfEnergy;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.TrapRegistry;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.TrapRegistryImpl;
-import com.shatteredpixel.shatteredpixeldungeon.mechanics.CircularShape;
-import com.shatteredpixel.shatteredpixeldungeon.mechanics.Shape;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
-import com.shatteredpixel.shatteredpixeldungeon.modifiers.TrapModifierProvider;
-import com.shatteredpixel.shatteredpixeldungeon.modifiers.TrapModifierProviderAdapter;
+import com.shatteredpixel.shatteredpixeldungeon.modifiers.TrapDamageModifierProvider;
+import com.shatteredpixel.shatteredpixeldungeon.modifiers.TrapDamageModifierProviderAdapter;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.CellSelector;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameSceneAdapter;
@@ -30,8 +28,6 @@ import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GameLogger;
 import com.watabou.utils.Bundle;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -39,7 +35,7 @@ import java.util.Set;
 
 public class Detonator extends Artifact {
 
-    private final TrapModifierProvider trapModifierProvider;
+    private final TrapDamageModifierProvider trapDamageModifierProvider;
     private final TrapRegistry trapRegistry;
     private final GameSceneInterface scene;
 
@@ -67,15 +63,15 @@ public class Detonator extends Artifact {
 
     public Detonator() {
         super();
-        this.trapModifierProvider = new TrapModifierProviderAdapter();
+        this.trapDamageModifierProvider = new TrapDamageModifierProviderAdapter();
         this.trapRegistry = new TrapRegistryImpl();
         this.scene = new GameSceneAdapter();
     }
 
     @Todo("Pass scene as dependency")
-    Detonator(GameLogger logger, DungeonInterface dungeon, TrapModifierProvider trapModifierProvider, TrapRegistry trapRegistry) {
+    Detonator(GameLogger logger, DungeonInterface dungeon, TrapDamageModifierProvider trapDamageModifierProvider, TrapRegistry trapRegistry) {
         super(logger, dungeon);
-        this.trapModifierProvider = trapModifierProvider;
+        this.trapDamageModifierProvider = trapDamageModifierProvider;
         this.trapRegistry = trapRegistry;
 
         this.scene = new GameSceneAdapter();
@@ -110,7 +106,7 @@ public class Detonator extends Artifact {
 
         actionConsumedCharge = false;
         DetonatorContext context = new DetonatorContext(hero, dungeon, logger, trapRegistry,
-            trapModifierProvider);
+                trapDamageModifierProvider);
 
         DetonatorAction strategy;
 
@@ -133,6 +129,7 @@ public class Detonator extends Artifact {
     @Override
     public void charge(Hero target, float amount) {
         if (cursed || target.hasBuff(MagicImmune.class)) return;
+        if (isUnequipped(target)) amount *= unequippedChargingFactor(target);
 
         gainCharges(amount);
         updateQuickslot();
@@ -194,13 +191,14 @@ public class Detonator extends Artifact {
     public class DetonatorRecharge extends ArtifactBuff {
         @Override
         public boolean act() {
-            if (charge < chargeCap && !cursed && target.buff(MagicImmune.class) == null) {
+            if (charge < chargeCap && !cursed && !target.hasBuff(MagicImmune.class)) {
                 if (Regeneration.regenOn()) {
                     float missing = (chargeCap - charge);
                     if (level() > 7) missing += 5*(level() - 7)/3f;
                     float turnsToCharge = (45 - missing);
                     turnsToCharge /= RingOfEnergy.artifactChargeMultiplier(target);
                     float chargeToGain = (1f / turnsToCharge);
+                    if (isUnequipped(Dungeon.hero)) chargeToGain *= unequippedChargingFactor(Dungeon.hero);
                     partialCharge += chargeToGain;
                 }
 
@@ -275,6 +273,11 @@ public class Detonator extends Artifact {
         });
     }
 
+    private float unequippedChargingFactor(Hero hero) {
+        int points = hero.pointsInTalent(Talent.HANDY_DETONATOR);
+        if (points == 3) return 1f;
+        return 0.25f * points;
+    }
 
     public void gainExp(int value) {
         if (level() == levelCap) return;
@@ -292,16 +295,6 @@ public class Detonator extends Artifact {
 
     private int calculateLevelUpExp() {
         return Math.min(10 * level() * level() + 50, 500);
-    }
-
-    @Deprecated
-    public boolean isCellWithinTrapSettingRange(int cell, Hero hero) {
-        int points = hero.pointsInTalent(Talent.DETONATOR_RANGE);
-        int radius = 1 + points;
-
-        int center = hero.getPosition();
-        Shape shape = new CircularShape(radius);
-        return shape.getCells(center).contains(cell);
     }
 
     protected void callExecuteSuper(Hero hero, String action) {

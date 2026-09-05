@@ -30,12 +30,10 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Poison;
-import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.darts.PoisonDart;
-import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
-import com.shatteredpixel.shatteredpixeldungeon.modifiers.DamageModifier;
+import com.shatteredpixel.shatteredpixeldungeon.modifiers.Modifier;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.MissileSprite;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 import com.watabou.noosa.audio.Sample;
@@ -62,7 +60,7 @@ public class PoisonDartTrap extends TargetTrap implements PhysicalDamageTrap {
 	
 	@Override
 	public void activate() {
-		activateWithModifier(new DamageModifier(0, 1));
+		activateWithModifier(Modifier.None);
 	}
 
 	@Override
@@ -71,7 +69,7 @@ public class PoisonDartTrap extends TargetTrap implements PhysicalDamageTrap {
 	}
 
 	@Override
-	public void activateWithModifier(DamageModifier modifier) {
+	public void activateWithModifier(Modifier modifier) {
 		//we handle this inside of a separate actor as the trap may produce a visual effect we need to pause for
 		Actor.add(new Actor() {
 
@@ -95,7 +93,7 @@ public class PoisonDartTrap extends TargetTrap implements PhysicalDamageTrap {
 									@Override
 									public void call() {
 										int dmg = getDamage() - finalTarget.drRoll();
-										dmg = modifier.apply(dmg);
+										dmg = (int) modifier.modify(dmg);
 										finalTarget.damage(dmg, PoisonDartTrap.this);
 										if (finalTarget == Dungeon.hero){
 											//for the poison dart traps in the Tengu fight
@@ -119,7 +117,7 @@ public class PoisonDartTrap extends TargetTrap implements PhysicalDamageTrap {
 						return false;
 					} else {
 						int dmg = getDamage() - finalTarget.drRoll();
-						dmg = modifier.apply(dmg);
+						dmg = (int) modifier.modify(dmg);
 						finalTarget.damage(dmg, PoisonDartTrap.this);
 						Buff.affect( finalTarget, Poison.class ).set( poisonAmount() );
 						return true;

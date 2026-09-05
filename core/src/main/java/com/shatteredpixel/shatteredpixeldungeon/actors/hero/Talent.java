@@ -462,10 +462,6 @@ public enum Talent {
 		public void tintIcon(Image icon) { icon.hardlight(0f, 0f, 1f); }
 		public float iconFadePercent() { return Math.max(0, visualcooldown() / 20); }
 	}
-	public static class ICanFightTooTracker extends Buff {
-		{ type = Buff.buffType.POSITIVE; }
-		public int icon() { return BuffIndicator.INVERT_MARK; }
-	}
 
 	int icon;
 	int maxPoints;
@@ -983,8 +979,8 @@ public enum Talent {
 			}
 		}
 
-		if (hero.hasTalent(I_CAN_FIGHT_TOO) && hero.hasBuff(ICanFightTooTracker.class)) {
-			hero.getBuff(ICanFightTooTracker.class).detach();
+		if (hero.hasTalent(I_CAN_FIGHT_TOO) && hero.hasBuff(ICanFightTooTalent.Tracker.class)) {
+			hero.getBuff(ICanFightTooTalent.Tracker.class).detach();
 			dmg += 1 + hero.pointsInTalent(I_CAN_FIGHT_TOO);
 		}
 
@@ -1124,6 +1120,7 @@ public enum Talent {
 				Collections.addAll(tierTalents, CLEANSE, LIGHT_READING);
 				break;
 			case SAPPER:
+				Collections.addAll(tierTalents, EXPLOSION_WILL, HANDY_DETONATOR);
 				break;
 		}
 		for (Talent talent : tierTalents){
@@ -1190,7 +1187,7 @@ public enum Talent {
 				Collections.addAll(tierTalents, LAY_ON_HANDS, AURA_OF_PROTECTION, WALL_OF_LIGHT);
 				break;
 			case ENGINEER:
-				Collections.addAll(tierTalents, TRAP_PROFICIENCY);
+				Collections.addAll(tierTalents, TRAP_PROFICIENCY, HEAVY_AMMO);
 				break;
 		}
 		for (Talent talent : tierTalents){

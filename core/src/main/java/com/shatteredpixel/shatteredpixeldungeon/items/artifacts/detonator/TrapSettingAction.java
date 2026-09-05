@@ -38,7 +38,6 @@ public class TrapSettingAction extends DetonatorAction {
         GameLogger logger = context.getLogger();
 
         if (!hero.withinFieldOfView(cell)) return;
-        if (!dungeon.isCellEmpty(cell) && !dungeon.isCellGrass(cell)) return;
 
         if (!detonator.hasStoredTrap()) {
             logger.info(Messages.get(Detonator.class, "set_trap_no_store"));

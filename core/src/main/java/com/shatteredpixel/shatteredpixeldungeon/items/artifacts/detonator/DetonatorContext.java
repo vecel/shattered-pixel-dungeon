@@ -3,7 +3,7 @@ package com.shatteredpixel.shatteredpixeldungeon.items.artifacts.detonator;
 import com.shatteredpixel.shatteredpixeldungeon.DungeonInterface;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.TrapRegistry;
-import com.shatteredpixel.shatteredpixeldungeon.modifiers.TrapModifierProvider;
+import com.shatteredpixel.shatteredpixeldungeon.modifiers.TrapDamageModifierProvider;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GameLogger;
 
 public class DetonatorContext {
@@ -11,14 +11,14 @@ public class DetonatorContext {
     private final DungeonInterface dungeon;
     private final GameLogger logger;
     private final TrapRegistry registry;
-    private final TrapModifierProvider trapModifierProvider;
+    private final TrapDamageModifierProvider trapDamageModifierProvider;
 
-    public DetonatorContext(Hero hero, DungeonInterface dungeon, GameLogger logger, TrapRegistry registry, TrapModifierProvider trapModifierProvider) {
+    public DetonatorContext(Hero hero, DungeonInterface dungeon, GameLogger logger, TrapRegistry registry, TrapDamageModifierProvider trapDamageModifierProvider) {
         this.hero = hero;
         this.dungeon = dungeon;
         this.logger = logger;
         this.registry = registry;
-        this.trapModifierProvider = trapModifierProvider;
+        this.trapDamageModifierProvider = trapDamageModifierProvider;
     }
 
     public Hero getHero() {
@@ -37,7 +37,7 @@ public class DetonatorContext {
         return registry;
     }
 
-    public TrapModifierProvider getTrapModifierProvider() {
-        return trapModifierProvider;
+    public TrapDamageModifierProvider getTrapModifierProvider() {
+        return trapDamageModifierProvider;
     }
 }

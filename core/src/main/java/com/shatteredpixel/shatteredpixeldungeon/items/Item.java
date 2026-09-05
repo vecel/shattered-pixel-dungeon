@@ -471,6 +471,10 @@ public class Item implements Bundlable {
 		return false;
 	}
 
+	public boolean isUnequipped(Hero hero) {
+		return !isEquipped(hero);
+	}
+
 	public final Item identify(){
 		return identify(true);
 	}

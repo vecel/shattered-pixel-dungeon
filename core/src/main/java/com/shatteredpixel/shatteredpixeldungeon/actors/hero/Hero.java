@@ -2079,17 +2079,7 @@ public class Hero extends Char {
 			}
 
 			if (lvl < MAX_LEVEL) {
-				lvl++;
-				levelUp = true;
-				
-				if (buff(ElixirOfMight.HTBoost.class) != null){
-					buff(ElixirOfMight.HTBoost.class).onLevelUp();
-				}
-				
-				updateHT( true );
-				attackSkill++;
-				defenseSkill++;
-
+				levelUp();
 			} else {
 				Buff.prolong(this, Bless.class, Bless.DURATION);
 				this.exp = 0;
@@ -2100,26 +2090,34 @@ public class Hero extends Char {
 			}
 			
 		}
-		
-		if (levelUp) {
-			
-			if (sprite != null) {
-				GLog.newLine();
-				GLog.p( Messages.get(this, "new_level") );
-				sprite.showStatus( CharSprite.POSITIVE, Messages.get(Hero.class, "level_up") );
-				Sample.INSTANCE.play( Assets.Sounds.LEVELUP );
-				if (lvl < Talent.tierLevelThresholds[Talent.MAX_TALENT_TIERS+1]){
-					GLog.newLine();
-					GLog.p( Messages.get(this, "new_talent") );
-					StatusPane.talentBlink = 10f;
-					WndHero.lastIdx = 1;
-				}
-			}
-			
-			Item.updateQuickslot();
-			
-			Badges.validateLevelReached();
+	}
+
+	public void levelUp() {
+		lvl++;
+
+		if (hasBuff(ElixirOfMight.HTBoost.class)){
+			buff(ElixirOfMight.HTBoost.class).onLevelUp();
 		}
+
+		updateHT( true );
+		attackSkill++;
+		defenseSkill++;
+
+		if (sprite != null) {
+			GLog.newLine();
+			logger.positive(Messages.get(this, "new_level"));
+			sprite.showStatus(CharSprite.POSITIVE, Messages.get(Hero.class, "level_up"));
+			audio.play(Assets.Sounds.LEVELUP);
+			if (lvl < Talent.tierLevelThresholds[Talent.MAX_TALENT_TIERS+1]){
+				GLog.newLine();
+				logger.positive( Messages.get(this, "new_talent") );
+				StatusPane.talentBlink = 10f;
+				WndHero.lastIdx = 1;
+			}
+		}
+
+		Item.updateQuickslot();
+		Badges.validateLevelReached();
 	}
 	
 	public int maxExp() {

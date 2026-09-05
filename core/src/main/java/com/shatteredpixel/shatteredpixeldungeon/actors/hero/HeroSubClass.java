@@ -50,8 +50,7 @@ public enum HeroSubClass {
 
 	PRIEST(HeroIcon.PRIEST),
 	PALADIN(HeroIcon.PALADIN),
-	@Todo("Add proper subclass icon")
-	ENGINEER(HeroIcon.MONK);
+	ENGINEER(HeroIcon.ENGINEER);
 
 	int icon;
 

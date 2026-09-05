@@ -23,6 +23,7 @@ package com.watabou.noosa;
 
 import com.badlogic.gdx.Files;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -262,4 +263,15 @@ public class TextInput extends Component {
 			if (!DeviceCompat.isDesktop()) Game.platform.updateSystemUI();
 		}
 	}
+
+	public TextInput withFontColor(Color color) {
+		textField.getStyle().fontColor = color;
+		return this;
+	}
+
+	public TextInput withTextAlignement(int alignement) {
+		textField.setAlignment(alignement);
+		return this;
+	}
+
 }

@@ -16,8 +16,8 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Detonator;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.TrapRegistry;
-import com.shatteredpixel.shatteredpixeldungeon.modifiers.DamageModifier;
-import com.shatteredpixel.shatteredpixeldungeon.modifiers.TrapModifierProvider;
+import com.shatteredpixel.shatteredpixeldungeon.modifiers.Modifier;
+import com.shatteredpixel.shatteredpixeldungeon.modifiers.TrapDamageModifierProvider;
 import com.shatteredpixel.shatteredpixeldungeon.utils.MockHero;
 import com.shatteredpixel.shatteredpixeldungeon.utils.logger.GameLoggerFake;
 
@@ -26,7 +26,7 @@ public class DetonatorContextFixture {
     public final DungeonInterface dungeon = mock(DungeonInterface.class);
     public final GameLoggerFake logger = new GameLoggerFake();
     public final TrapRegistry registry = mock(TrapRegistry.class);
-    public final TrapModifierProvider provider = mock(TrapModifierProvider.class);
+    public final TrapDamageModifierProvider provider = mock(TrapDamageModifierProvider.class);
     public final Detonator detonator = spy(Detonator.class);
     public final Trap trap = mock(Trap.class);
     public final DetonatorContext context = new DetonatorContext(
@@ -38,15 +38,14 @@ public class DetonatorContextFixture {
         when(dungeon.getTrap(anyInt())).thenReturn(trap);
         when(dungeon.isCellEmpty(anyInt())).thenReturn(true);
         when(dungeon.hasVisibleTrapAt(anyInt())).thenReturn(true);
-        when(provider.getModifierFor(hero)).thenReturn(DamageModifier.NONE);
+        when(provider.getDamageModifier(hero)).thenReturn(Modifier.None);
         when(detonator.isKnown(trap)).thenReturn(true);
         when(trap.isActive()).thenReturn(true);
 
         detonator.setCharge(10);
 
-        doNothing().when(trap).trigger(any(DamageModifier.class));
+        doNothing().when(trap).trigger(any(Modifier.class));
         doNothing().when(detonator).spendCharges(anyInt());
-        doReturn(true).when(detonator).isCellWithinTrapSettingRange(anyInt(), eq(hero));
         doReturn(trap).when(detonator).getStoredTrap();
         doReturn(true).when(detonator).hasStoredTrap();
     }
@@ -85,10 +84,7 @@ public class DetonatorContextFixture {
     public void withSolidCell() {
         when(dungeon.isCellEmpty(anyInt())).thenReturn(false);
         when(dungeon.isCellGrass(anyInt())).thenReturn(false);
-    }
-
-    public void withoutTrapSettingRange() {
-        doReturn(false).when(detonator).isCellWithinTrapSettingRange(anyInt(), eq(hero));
+        when(dungeon.isCellEmbers(anyInt())).thenReturn(false);
     }
 
     public void withCellOccupied() {

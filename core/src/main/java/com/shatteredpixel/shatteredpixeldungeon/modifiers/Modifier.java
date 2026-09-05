@@ -19,6 +19,14 @@ public class Modifier {
         return (value + bonus) * factor;
     }
 
+    public float getFactor() {
+        return factor;
+    }
+
+    public float getBonus() {
+        return bonus;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;

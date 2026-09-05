@@ -8,8 +8,8 @@ import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.TrapRegistry;
 import com.shatteredpixel.shatteredpixeldungeon.mechanics.ActionTimeCalculator;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
-import com.shatteredpixel.shatteredpixeldungeon.modifiers.DamageModifier;
-import com.shatteredpixel.shatteredpixeldungeon.modifiers.TrapModifierProvider;
+import com.shatteredpixel.shatteredpixeldungeon.modifiers.Modifier;
+import com.shatteredpixel.shatteredpixeldungeon.modifiers.TrapDamageModifierProvider;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GameLogger;
 
 import java.util.List;
@@ -27,7 +27,7 @@ public class TrapActivationAction extends DetonatorAction {
         Hero hero = context.getHero();
         DungeonInterface dungeon = context.getDungeon();
         GameLogger logger = context.getLogger();
-        TrapModifierProvider provider = context.getTrapModifierProvider();
+        TrapDamageModifierProvider provider = context.getTrapModifierProvider();
         TrapRegistry registry = context.getRegistry();
 
         if (!hero.withinFieldOfView(cell)) return;
@@ -46,7 +46,7 @@ public class TrapActivationAction extends DetonatorAction {
 
         detonator.spendCharges(activateCharge);
 
-        DamageModifier modifier = provider.getModifierFor(hero);
+        Modifier modifier = provider.getDamageModifier(hero);
         trap.trigger(modifier);
 
         int exp = registry.getDanger(trap.getClass());

@@ -21,6 +21,9 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.scenes;
 
+import com.karandys.shatteredpixeldungeon.console.ConsoleAware;
+import com.karandys.shatteredpixeldungeon.console.GameConsole;
+import com.karandys.shatteredpixeldungeon.console.ui.ConsoleComponent;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Challenges;
@@ -154,7 +157,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Locale;
 
-public class GameScene extends PixelScene {
+public class GameScene extends PixelScene implements ConsoleAware {
 
 	static GameScene scene;
 
@@ -176,6 +179,7 @@ public class GameScene extends PixelScene {
 	private GameLog log;
 
 	private static CellSelector cellSelector;
+	private ConsoleComponent consoleComponent;
 	
 	private Group terrain;
 	private Group customTiles;
@@ -208,6 +212,7 @@ public class GameScene extends PixelScene {
 	private LootIndicator loot;
 	private ActionIndicator action;
 	private ResumeIndicator resume;
+
 
 	{
 		inGameScene = true;
@@ -534,6 +539,9 @@ public class GameScene extends PixelScene {
 			blocker.camera = uiCamera;
 			add(blocker);
 		}
+
+		consoleComponent = new ConsoleComponent(uiCamera);
+		add(consoleComponent);
 
 		layoutTags();
 
@@ -1875,4 +1883,9 @@ public class GameScene extends PixelScene {
 			return null;
 		}
 	};
+
+	@Override
+	public void setConsole(GameConsole console) {
+		consoleComponent.setConsole(console);
+	}
 }

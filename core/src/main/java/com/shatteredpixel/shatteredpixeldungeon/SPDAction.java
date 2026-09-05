@@ -89,6 +89,7 @@ public class SPDAction extends GameAction {
 
 	public static final GameAction ZOOM_IN      = new SPDAction("zoom_in");
 	public static final GameAction ZOOM_OUT     = new SPDAction("zoom_out");
+	public static final GameAction CONSOLE 		= new SPDAction("console");
 
 	private static final LinkedHashMap<Integer, GameAction> defaultBindings = new LinkedHashMap<>();
 	static {
@@ -147,6 +148,7 @@ public class SPDAction extends GameAction {
 		defaultBindings.put( Input.Keys.PLUS,           SPDAction.ZOOM_IN );
 		defaultBindings.put( Input.Keys.EQUALS,         SPDAction.ZOOM_IN );
 		defaultBindings.put( Input.Keys.MINUS,          SPDAction.ZOOM_OUT );
+		defaultBindings.put(Input.Keys.M, 			SPDAction.CONSOLE);
 	}
 
 	public static LinkedHashMap<Integer, GameAction> getDefaults() {

@@ -25,16 +25,14 @@ import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
-import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Beam;
 import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
-import com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
-import com.shatteredpixel.shatteredpixeldungeon.modifiers.DamageModifier;
+import com.shatteredpixel.shatteredpixeldungeon.modifiers.Modifier;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 import com.watabou.noosa.audio.Sample;
@@ -52,7 +50,7 @@ public class DisintegrationTrap extends TargetTrap implements PhysicalDamageTrap
 
 	@Override
 	public void activate() {
-		activateWithModifier(new DamageModifier(0, 1));
+		activateWithModifier(Modifier.None);
 	}
 
 	@Override
@@ -61,7 +59,7 @@ public class DisintegrationTrap extends TargetTrap implements PhysicalDamageTrap
 	}
 
 	@Override
-	public void activateWithModifier(DamageModifier modifier) {
+	public void activateWithModifier(Modifier modifier) {
 		Char target = findClosestCharacter();
 
 		Heap heap = Dungeon.level.heaps.get(pos);

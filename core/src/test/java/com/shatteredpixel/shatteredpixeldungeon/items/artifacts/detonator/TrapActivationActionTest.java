@@ -10,7 +10,7 @@ import static org.mockito.Mockito.mock;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.talents.ArtifactUsedEvent;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Detonator;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
-import com.shatteredpixel.shatteredpixeldungeon.modifiers.DamageModifier;
+import com.shatteredpixel.shatteredpixeldungeon.modifiers.Modifier;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GdxApplicationExtension;
 import com.shatteredpixel.shatteredpixeldungeon.utils.logger.LogEntry;
 import com.shatteredpixel.shatteredpixeldungeon.utils.logger.LogLevel;
@@ -72,7 +72,7 @@ class TrapActivationActionTest {
 
         action.execute(1);
 
-        verifyNever(fixture.trap).trigger(any(DamageModifier.class));
+        verifyNever(fixture.trap).trigger(any(Modifier.class));
         assertTrue(fixture.logger.contains(entry));
     }
 
@@ -80,7 +80,7 @@ class TrapActivationActionTest {
     void triggers_trap_when_used() {
         action.execute(1);
 
-        verifyOnce(fixture.trap).trigger(any(DamageModifier.class));
+        verifyOnce(fixture.trap).trigger(any(Modifier.class));
     }
 
     @Test

@@ -1,6 +1,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.items.artifacts;
 
 import static com.shatteredpixel.shatteredpixeldungeon.utils.MockitoExtension.verifyNever;
+import static com.shatteredpixel.shatteredpixeldungeon.utils.MockitoExtension.verifyOnce;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -12,7 +13,6 @@ import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -23,7 +23,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.ToxicTrap;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.TrapRegistry;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.WornDartTrap;
-import com.shatteredpixel.shatteredpixeldungeon.mechanics.CircularShape;
+import com.shatteredpixel.shatteredpixeldungeon.modifiers.Modifier;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GdxApplicationExtension;
 import com.shatteredpixel.shatteredpixeldungeon.utils.MockHero;
 import com.shatteredpixel.shatteredpixeldungeon.utils.logger.GameLoggerFake;
@@ -31,19 +31,12 @@ import com.shatteredpixel.shatteredpixeldungeon.utils.logger.LogEntry;
 import com.shatteredpixel.shatteredpixeldungeon.utils.logger.LogLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
-import com.shatteredpixel.shatteredpixeldungeon.modifiers.DamageModifier;
-import com.shatteredpixel.shatteredpixeldungeon.modifiers.TrapModifierProvider;
-import com.shatteredpixel.shatteredpixeldungeon.scenes.CellSelector;
-import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
+import com.shatteredpixel.shatteredpixeldungeon.modifiers.TrapDamageModifierProvider;
 import com.watabou.utils.Bundle;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.MockedConstruction;
-import org.mockito.MockedStatic;
 
 import java.util.List;
 
@@ -54,7 +47,7 @@ class DetonatorTest {
     private Detonator detonator;
     private Hero mockHero;
     private DungeonInterface mockDungeon;
-    private TrapModifierProvider mockTrapModifierProvider;
+    private TrapDamageModifierProvider mockTrapDamageModifierProvider;
     private TrapRegistry mockTrapRegistry;
 
     private Trap mockTrap;
@@ -67,12 +60,12 @@ class DetonatorTest {
     void setUp() {
         mockHero = MockHero.create();
         mockDungeon = mock(DungeonInterface.class);
-        mockTrapModifierProvider = mock(TrapModifierProvider.class);
+        mockTrapDamageModifierProvider = mock(TrapDamageModifierProvider.class);
         mockTrapRegistry = mock(TrapRegistry.class);
         mockTrap = mock(Trap.class);
         loggerFake = new GameLoggerFake();
 
-        trueDetonator = new Detonator(loggerFake, mockDungeon, mockTrapModifierProvider, mockTrapRegistry);
+        trueDetonator = new Detonator(loggerFake, mockDungeon, mockTrapDamageModifierProvider, mockTrapRegistry);
         detonator = spy(trueDetonator);
 
         doReturn(true).when(detonator).isEquipped(mockHero);
@@ -81,7 +74,7 @@ class DetonatorTest {
         when(mockDungeon.getTrap(any(Integer.class))).thenReturn(mockTrap);
         when(mockDungeon.isCellEmpty(any(Integer.class))).thenReturn(true);
         when(mockHero.withinFieldOfView(any(Integer.class))).thenReturn(true);
-        when(mockTrapModifierProvider.getModifierFor(mockHero)).thenReturn(DamageModifier.NONE);
+        when(mockTrapDamageModifierProvider.getDamageModifier(mockHero)).thenReturn(Modifier.None);
         when(mockTrapRegistry.getDanger(any(Class.class))).thenReturn(10);
 
         doNothing().when(mockHero.sprite).operate(1);
@@ -141,6 +134,65 @@ class DetonatorTest {
     @Test
     void has_recharging_passive_buff() {
         fail("Not implemented yet");
+    }
+
+    @Test
+    void recharges_when_equipped() {
+        fail("Not implemented");
+    }
+    
+    @Test
+    void does_not_charge_when_cursed() {
+        detonator.cursed = true;
+
+        detonator.charge(mockHero, 1f);
+
+        verifyNever(detonator).gainCharges(anyInt());
+    }
+
+    @Test
+    void does_not_charge_when_hero_is_immune_to_magic() {
+        when(mockHero.hasBuff(MagicImmune.class)).thenReturn(true);
+
+        detonator.charge(mockHero, 1f);
+
+        verifyNever(detonator).gainCharges(anyInt());
+    }
+
+    @Test
+    void recharges_in_inventory_when_hero_has_handy_detonator_talent_at_level_one() {
+        when(detonator.isUnequipped(mockHero)).thenReturn(true);
+        when(mockHero.pointsInTalent(Talent.HANDY_DETONATOR)).thenReturn(1);
+        float amount = 1f;
+        float expected = 0.25f;
+
+        detonator.charge(mockHero, amount);
+
+        verifyOnce(detonator).gainCharges(expected);
+    }
+
+    @Test
+    void recharges_in_inventory_when_hero_has_handy_detonator_talent_at_level_two() {
+        when(detonator.isUnequipped(mockHero)).thenReturn(true);
+        when(mockHero.pointsInTalent(Talent.HANDY_DETONATOR)).thenReturn(2);
+        float amount = 1f;
+        float expected = 0.50f;
+
+        detonator.charge(mockHero, amount);
+
+        verifyOnce(detonator).gainCharges(expected);
+    }
+
+    @Test
+    void recharges_in_inventory_with_normal_speed_when_hero_has_handy_detonator_talent_at_level_three() {
+        when(detonator.isUnequipped(mockHero)).thenReturn(true);
+        when(mockHero.pointsInTalent(Talent.HANDY_DETONATOR)).thenReturn(3);
+        float amount = 1f;
+        float expected = 1f;
+
+        detonator.charge(mockHero, amount);
+
+        verifyOnce(detonator).gainCharges(expected);
     }
 
     @Test

@@ -99,8 +99,8 @@ class TrapSettingActionTest {
 
     @Test
     void does_not_work_when_out_of_range() {
+        fixture.withSolidCell();
         LogEntry entry = new LogEntry(LogLevel.INFO, Messages.get(Detonator.class, "set_trap_out_of_range"));
-        fixture.withoutTrapSettingRange();
 
         action.execute(1);
 

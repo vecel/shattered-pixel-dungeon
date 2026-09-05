@@ -1,14 +1,14 @@
 package com.shatteredpixel.shatteredpixeldungeon.levels.traps;
 
-import com.shatteredpixel.shatteredpixeldungeon.modifiers.DamageModifier;
+import com.shatteredpixel.shatteredpixeldungeon.modifiers.Modifier;
 
 public interface PhysicalDamageTrap {
 
     int getDamage();
 
-    void activateWithModifier(DamageModifier modifier);
+    void activateWithModifier(Modifier modifier);
 
-    default int getModifiedDamage(DamageModifier modifier) {
-        return modifier.apply(getDamage());
+    default int getModifiedDamage(Modifier modifier) {
+        return (int) modifier.modify(getDamage());
     }
 }
