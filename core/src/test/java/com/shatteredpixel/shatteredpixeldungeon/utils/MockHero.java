@@ -12,6 +12,10 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite;
 
+/**
+ * @deprecated Prefer to use {@code FakeHero} class
+ */
+@Deprecated
 public class MockHero {
 
     public final Hero hero;

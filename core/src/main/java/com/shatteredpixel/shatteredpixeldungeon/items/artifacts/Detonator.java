@@ -88,6 +88,7 @@ public class Detonator extends Artifact {
         return actions;
     }
 
+    @Todo("Add actions if item is unequipped, but hero has handy detonator talent, +test")
     @Override
     public void execute(Hero hero, String action) {
         callExecuteSuper(hero, action);

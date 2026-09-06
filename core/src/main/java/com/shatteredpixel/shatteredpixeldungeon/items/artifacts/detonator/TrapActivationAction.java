@@ -58,10 +58,10 @@ public class TrapActivationAction extends DetonatorAction {
 
         hero.dispelInvisibility();
 
+        float time = actionTime.calculate(hero);
+
         ArtifactUsedEvent event = new ArtifactUsedEvent(hero, detonator, Detonator.AC_ACTIVATE);
         hero.onArtifactUsed(event);
-
-        float time = actionTime.calculate(hero);
 
         hero.spendAndNext(time);
     }

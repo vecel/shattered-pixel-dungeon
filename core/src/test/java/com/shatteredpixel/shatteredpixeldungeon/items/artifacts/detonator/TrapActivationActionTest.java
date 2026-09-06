@@ -19,6 +19,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+/**
+ * @deprecated This test class uses deprecated mocked Hero. Add new tests in {@link TrapActivationActionWithHeroFakeTest}.
+ */
+@Deprecated
 @ExtendWith(GdxApplicationExtension.class)
 class TrapActivationActionTest {
 

@@ -13,6 +13,7 @@ import com.shatteredpixel.shatteredpixeldungeon.DungeonInterface;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.cooldowns.QuickActivationTalentCooldown;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.fakes.FakeHero;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Detonator;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.TrapRegistry;
@@ -22,19 +23,28 @@ import com.shatteredpixel.shatteredpixeldungeon.utils.MockHero;
 import com.shatteredpixel.shatteredpixeldungeon.utils.logger.GameLoggerFake;
 
 public class DetonatorContextFixture {
-    public final Hero hero = MockHero.create();
+    public Hero hero = MockHero.create();
     public final DungeonInterface dungeon = mock(DungeonInterface.class);
     public final GameLoggerFake logger = new GameLoggerFake();
     public final TrapRegistry registry = mock(TrapRegistry.class);
     public final TrapDamageModifierProvider provider = mock(TrapDamageModifierProvider.class);
     public final Detonator detonator = spy(Detonator.class);
     public final Trap trap = mock(Trap.class);
-    public final DetonatorContext context = new DetonatorContext(
+
+    public DetonatorContext context = new DetonatorContext(
             hero, dungeon, logger, registry, provider
     );
 
+    /**
+     * @deprecated Use {@link DetonatorContextFixture(Hero)} constructor.
+     */
+    @Deprecated
     public DetonatorContextFixture() {
         when(hero.withinFieldOfView(anyInt())).thenReturn(true);
+        initializeMocks();
+    }
+
+    private void initializeMocks() {
         when(dungeon.getTrap(anyInt())).thenReturn(trap);
         when(dungeon.isCellEmpty(anyInt())).thenReturn(true);
         when(dungeon.hasVisibleTrapAt(anyInt())).thenReturn(true);
