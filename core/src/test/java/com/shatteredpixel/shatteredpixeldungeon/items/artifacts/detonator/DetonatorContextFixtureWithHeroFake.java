@@ -1,13 +1,13 @@
 package com.shatteredpixel.shatteredpixeldungeon.items.artifacts.detonator;
 
-import com.shatteredpixel.shatteredpixeldungeon.fakes.FakeHero;
+import com.shatteredpixel.shatteredpixeldungeon.fakes.HeroFake;
 
 public class DetonatorContextFixtureWithHeroFake extends DetonatorContextFixture {
-    public FakeHero hero;
+    public HeroFake hero;
 
     public DetonatorContextFixtureWithHeroFake() {
         super();
-        this.hero = new FakeHero();
+        this.hero = new HeroFake();
         this.context = new DetonatorContext(
                 this.hero, this.dungeon, this.logger, this.registry, this.provider
         );

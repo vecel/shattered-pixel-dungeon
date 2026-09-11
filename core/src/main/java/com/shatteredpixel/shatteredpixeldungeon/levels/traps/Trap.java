@@ -91,7 +91,7 @@ public abstract class Trap implements Bundlable {
 	}
 
 	public void trigger() {
-		trigger(new Modifier(0, 1));
+		trigger(Modifier.None);
 	}
 
 	public void trigger(Modifier modifier) {

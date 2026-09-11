@@ -88,6 +88,9 @@ import com.shatteredpixel.shatteredpixeldungeon.effects.FloatingText;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
 import com.shatteredpixel.shatteredpixeldungeon.effects.SpellSprite;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Splash;
+import com.shatteredpixel.shatteredpixeldungeon.events.GameEvent;
+import com.shatteredpixel.shatteredpixeldungeon.events.Listener;
+import com.shatteredpixel.shatteredpixeldungeon.events.ListenersRegistry;
 import com.shatteredpixel.shatteredpixeldungeon.items.Ankh;
 import com.shatteredpixel.shatteredpixeldungeon.items.Dewdrop;
 import com.shatteredpixel.shatteredpixeldungeon.items.EquipableItem;
@@ -210,6 +213,8 @@ public class Hero extends Char {
 	private final GameLogger logger;
 	private final GameSceneInterface gameScene;
 	private final Audio audio;
+
+	private final ListenersRegistry listeners = new ListenersRegistry();
 
 	{
 		actPriority = HERO_PRIO;
@@ -2617,6 +2622,7 @@ public class Hero extends Char {
 
 	public void onArtifactUsed(ArtifactUsedEvent event) {
 		Talent.onArtifactUsed(event);
+		listeners.notify(event);
 	}
 
 	public boolean withinFieldOfView(int cell) {
@@ -2631,5 +2637,13 @@ public class Hero extends Char {
 
 	public int getPosition() {
 		return pos;
+	}
+
+	public <T extends GameEvent> void addListener(Class<T> type, Listener<T> listener) {
+		listeners.add(type, listener);
+	}
+
+	public <T extends GameEvent> void removeListener(Listener<T> listener) {
+		listeners.remove(listener);
 	}
 }

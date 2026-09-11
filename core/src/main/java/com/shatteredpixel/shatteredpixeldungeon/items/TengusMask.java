@@ -29,6 +29,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Preparation;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.subclasses.SubclassesRegistry;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Speck;
 import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
@@ -42,6 +43,7 @@ import com.watabou.noosa.particles.Emitter;
 import java.util.ArrayList;
 
 public class TengusMask extends Item {
+	private final SubclassesRegistry registry;
 	
 	private static final String AC_WEAR	= "WEAR";
 	
@@ -53,8 +55,16 @@ public class TengusMask extends Item {
 
 		unique = true;
 	}
-	
-	@Override
+
+    public TengusMask() {
+        this.registry = new SubclassesRegistry();
+    }
+
+	public TengusMask(SubclassesRegistry registry) {
+		this.registry = registry;
+	}
+
+    @Override
 	public ArrayList<String> actions( Hero hero ) {
 		ArrayList<String> actions = super.actions( hero );
 		actions.add( AC_WEAR );
@@ -101,6 +111,8 @@ public class TengusMask extends Item {
 		
 		curUser.subClass = way;
 		Talent.initSubclassTalents(curUser);
+
+		registry.get(way).initialize(curUser);
 
 		if (way == HeroSubClass.ASSASSIN && curUser.invisible > 0){
 			Buff.affect(curUser, Preparation.class);

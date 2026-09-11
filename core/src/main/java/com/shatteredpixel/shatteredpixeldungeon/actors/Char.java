@@ -1183,8 +1183,21 @@ public abstract class Char extends Actor {
 		return Buff.affect(this, buffClass);
 	}
 
+	/**
+	 * Applies a buff to character. It is a wrapper for Buff.affect(Char, BuffClass) call. It is okay
+	 * to use it when you can create fresh Buff instance using reflections. If you want apply concrete
+	 * Buff object, use {@code applyBuff(Buff)} instead.
+	 *
+	 * @deprecated Pass concrete Buff object instead of class reference.
+	 */
+	@Deprecated
 	public synchronized <T extends Buff> void applyBuff(Class<T> buffClass) {
 		Buff.affect(this, buffClass);
+	}
+
+	public synchronized <T extends Buff> void applyBuff(T buff) {
+		if (hasBuff(buff.getClass())) return;
+		buff.attachTo(this);
 	}
 
 	public synchronized <T extends FlavourBuff> void applyCooldownBuff(FlavourBuff buff, float duration) {

@@ -132,11 +132,6 @@ class DetonatorTest {
     }
 
     @Test
-    void has_recharging_passive_buff() {
-        fail("Not implemented yet");
-    }
-
-    @Test
     void recharges_when_equipped() {
         fail("Not implemented");
     }

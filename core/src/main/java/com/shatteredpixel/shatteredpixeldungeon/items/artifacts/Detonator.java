@@ -3,6 +3,7 @@ package com.shatteredpixel.shatteredpixeldungeon.items.artifacts;
 import com.karandys.todo.Todo;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.DungeonInterface;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MagicImmune;
 import com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Regeneration;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
@@ -80,22 +81,24 @@ public class Detonator extends Artifact {
     @Override
     public ArrayList<String> actions(Hero hero) {
         ArrayList<String> actions = super.actions(hero);
-        if (isEquipped(hero) && !cursed && !hero.hasBuff(MagicImmune.class)) {
-            actions.add(AC_STORE_TRAP);
-            actions.add(AC_SET_TRAP);
-            actions.add(AC_ACTIVATE);
-        }
+        if (cursed) return actions;
+        if (hero.hasBuff(MagicImmune.class)) return actions;
+        if (isUnequipped(hero) && !hero.hasTalent(Talent.HANDY_DETONATOR)) return actions;
+
+        actions.add(AC_STORE_TRAP);
+        actions.add(AC_SET_TRAP);
+        actions.add(AC_ACTIVATE);
+
         return actions;
     }
 
-    @Todo("Add actions if item is unequipped, but hero has handy detonator talent, +test")
     @Override
     public void execute(Hero hero, String action) {
         callExecuteSuper(hero, action);
 
         if (hero.hasBuff(MagicImmune.class)) return;
 
-        if (!isEquipped(hero)) {
+        if (!isEquipped(hero) && !hero.hasTalent(Talent.HANDY_DETONATOR)) {
             logger.info(Messages.get(Artifact.class, "need_to_equip"));
             return;
         }
@@ -144,8 +147,22 @@ public class Detonator extends Artifact {
     }
 
     @Override
+    public boolean doUnequip(Hero hero, boolean collect, boolean single) {
+        boolean didUnequip = super.doUnequip(hero, collect, single);
+        if (!didUnequip) return false;
+
+        if (hero.hasTalent(Talent.HANDY_DETONATOR)) {
+            float factor = unequippedChargingFactor(hero);
+            passiveBuff = new DetonatorRecharge(factor);
+            passiveBuff.attachTo(hero);
+        }
+
+        return true;
+    }
+
+    @Override
     protected ArtifactBuff passiveBuff() {
-        return new DetonatorRecharge();
+        return new DetonatorRecharge(1f);
     }
 
     @Todo("Add stored trap name")
@@ -190,6 +207,13 @@ public class Detonator extends Artifact {
     }
 
     public class DetonatorRecharge extends ArtifactBuff {
+
+        private final float chargingFactor;
+
+        public DetonatorRecharge(float chargingFactor) {
+            this.chargingFactor = chargingFactor;
+        }
+
         @Override
         public boolean act() {
             if (charge < chargeCap && !cursed && !target.hasBuff(MagicImmune.class)) {
@@ -199,7 +223,7 @@ public class Detonator extends Artifact {
                     float turnsToCharge = (45 - missing);
                     turnsToCharge /= RingOfEnergy.artifactChargeMultiplier(target);
                     float chargeToGain = (1f / turnsToCharge);
-                    if (isUnequipped(Dungeon.hero)) chargeToGain *= unequippedChargingFactor(Dungeon.hero);
+                    chargeToGain *= chargingFactor;
                     partialCharge += chargeToGain;
                 }
 
@@ -218,13 +242,15 @@ public class Detonator extends Artifact {
             if (cooldown > 0)
                 cooldown --;
 
-            updateQuickslot();
-
-            spend( TICK );
+            scene.updateInventory();
+            spend(TICK);
 
             return true;
         }
 
+        public float getChargingFactor() {
+            return chargingFactor;
+        }
     }
 
     public void storeTrap(Trap trap) {
@@ -260,6 +286,7 @@ public class Detonator extends Artifact {
             public void onSelect(Integer cell) {
                 if (cell == null) return;
                 strategy.execute(cell);
+                scene.updateInventory();
             }
 
             @Override

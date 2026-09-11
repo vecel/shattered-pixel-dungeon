@@ -1,9 +1,10 @@
 package com.shatteredpixel.shatteredpixeldungeon.actors.hero.talents;
 
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.events.GameEvent;
 import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact;
 
-public class ArtifactUsedEvent {
+public class ArtifactUsedEvent implements GameEvent {
     private Hero hero;
     private Artifact artifact;
     private String action;

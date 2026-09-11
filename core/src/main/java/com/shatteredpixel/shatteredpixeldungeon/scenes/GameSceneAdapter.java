@@ -8,6 +8,11 @@ import java.util.List;
 
 public class GameSceneAdapter implements GameSceneInterface {
     @Override
+    public void updateInventory() {
+        GameScene.updateItemDisplays = true;
+    }
+
+    @Override
     public void updateFog(int cell, int radius) {
         GameScene.updateFog(cell, radius);
     }

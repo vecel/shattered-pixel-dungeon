@@ -5,6 +5,7 @@ import com.watabou.noosa.Visual;
 import java.util.List;
 
 public interface GameSceneInterface {
+    void updateInventory();
     void updateFog(int cell, int radius);
     void effectOverFog(Visual effect);
     void discover(int cell, int oldValue);
